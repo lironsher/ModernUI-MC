@@ -289,7 +289,7 @@ public abstract class UIManager implements LifecycleOwner {
                 minecraft.player.closeContainer();
             }
         } else {
-            minecraft.setScreen(screen.getPreviousScreen());
+            minecraft.setScreenAndShow(screen.getPreviousScreen());
         }
     }
 
@@ -558,7 +558,7 @@ public abstract class UIManager implements LifecycleOwner {
     public void onPostMouseInput(int button, int action, int mods) {
         // We should ensure (overlay == null && screen != null)
         // and the screen must be a mui screen
-        if (minecraft.getOverlay() == null && mScreen != null) {
+        if (minecraft.gui.overlay() == null && mScreen != null) {
             //ModernUI.LOGGER.info(MARKER, "Button: {} {} {}", event.getButton(), event.getAction(), event.getMods());
             final long now = Core.timeNanos();
             float x = (float) (minecraft.mouseHandler.xpos() *
@@ -1132,7 +1132,7 @@ public abstract class UIManager implements LifecycleOwner {
 
     public void renderAbove(GuiRenderState guiRenderState) {
         if (minecraft.isRunning() && mRunning &&
-                mScreen == null && minecraft.getOverlay() == null) {
+                mScreen == null && minecraft.gui.overlay() == null) {
             // Render the UI above everything
             render(new GuiGraphicsExtractor(minecraft, guiRenderState, 0, 0), 0, 0, 0);
         }
