@@ -808,12 +808,12 @@ public abstract class UIManager implements LifecycleOwner {
         String str = builder.toString();
         if (minecraft.level != null) {
             /*try {
-                SEND_TO_CHAT.invoke(minecraft.gui.getChat(), ,
+                SEND_TO_CHAT.invoke(minecraft.gui.hud.getChat(), ,
                         0xCBD366, minecraft.gui.getGuiTicks(), false);
 
             } catch (IllegalAccessException | InvocationTargetException ignored) {
             }*/
-            minecraft.gui.getChat().addClientSystemMessage(Component.literal(str).withStyle(ChatFormatting.GRAY));
+            minecraft.gui.hud.getChat().addClientSystemMessage(Component.literal(str).withStyle(ChatFormatting.GRAY));
         }
         LOGGER.info(MARKER, str);
     }
@@ -839,7 +839,7 @@ public abstract class UIManager implements LifecycleOwner {
             pw.println((Object) null);
         }
 
-        Screen screen = minecraft.screen;
+        Screen screen = minecraft.gui.screen();
         if (screen != null) {
             pw.print("Screen: ");
             pw.println(screen.getClass());
@@ -1218,7 +1218,7 @@ public abstract class UIManager implements LifecycleOwner {
                     sb.appendCodePoint(cp++);
                 }
                 mTestCodepoint = end;
-                minecraft.gui.getChat().addClientSystemMessage(Component.literal(sb.toString()));
+                minecraft.gui.hud.getChat().addClientSystemMessage(Component.literal(sb.toString()));
             }
         }
     }

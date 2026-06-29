@@ -41,16 +41,22 @@ Note: errors are double-reported (Fabric compile + common platform compile), so 
 
 ## Remaining work — do it in this order
 
-### Step 1 — Quick accessor fixes (4 errors, ~30 min, low risk)
-These aren't pure renames but are small/local: the symbols became private/removed, so add
-`@Accessor`/`@Invoker` mixins (ModernUI already has a mixin package: `icyllis.modernui.mc.mixin`).
-- `Minecraft.screen` field removed (no getter). Add `@Accessor("screen") Screen getScreen();`
-  to a `MixinMinecraft` (accessor) and use it. Fixes `UIManager.java:842`, `OptiFineIntegration.java:56`.
-- `Gui.getChat()` removed. Chat restructured; `ChatComponent.addClientSystemMessage(...)` still
-  exists but `Gui` exposes no public accessor — add `@Accessor`/`@Invoker` to reach the chat
-  component. Fixes `UIManager.java:816, 1221`.
-- `ChatFormatting.getChar()` removed; backing `code` is private (`getByCode(char)` is the reverse).
-  Add an accessor for `code`. Fixes `MuiModApi.java:455, 456`.
+### Step 1 — Screen/overlay/chat relocation + getChar accessor (RESOLVED — concrete answers below)
+26.2 moved screen/overlay management **off `Minecraft` onto `Gui`**, and chat **onto a new `Hud`**.
+All replacements are public (no new accessor mixins needed except ChatFormatting). Verified in jar:
+- `minecraft.screen` (field removed) → **`minecraft.gui.screen()`** (`Gui.screen()`/`Gui.setScreen(Screen)`).
+  `Minecraft.gui` is still `public final Gui`. Fixes `UIManager.java:842`, `OptiFineIntegration.java:56`.
+- `minecraft.getOverlay()` → **`minecraft.gui.overlay()`** (already applied in mechanical commit).
+- `minecraft.setScreen(s)` → **`minecraft.setScreenAndShow(s)`** (already applied; it delegates to `Gui.setScreen`).
+- `minecraft.gui.getChat()` → **`minecraft.gui.hud.getChat()`** — chat moved to `net.minecraft.client.gui.Hud`
+  (`Gui.hud` is `public final Hud`; `Hud.getChat() : ChatComponent`; `addClientSystemMessage` unchanged).
+  Fixes `UIManager.java:816, 1221`.
+- `ChatFormatting.getChar()` removed; backing `code` is `private final char`. Add an interface mixin
+  `AccessChatFormatting` with `@Accessor("code") char getCode();` (pattern: `mixin/AccessOptions.java`),
+  register it in the mixins json, use `((AccessChatFormatting) (Object) fmt).getCode()`. Fixes `MuiModApi.java:455,456`.
+- RUNTIME (not compile): `MixinMinecraft` `@Shadow public Screen screen` + `@Inject(method="setScreen"…)` are
+  now stale (field gone, method renamed). Re-point screen-change detection to **`Gui.setScreen`** (new
+  `MixinGui` or move the inject) so `MuiModApi.dispatchOnScreenChange` still fires.
 
 ### Step 2 — Texture system: `TextureFormat` → `GpuFormat` (GlTexture_Wrapped, ModernFontAtlas; ~10 errors)
 26.2 removed `com.mojang.blaze3d.textures.TextureFormat`. Replacements (verified in jar):
