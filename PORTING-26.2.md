@@ -60,14 +60,19 @@ All replacements are public (no new accessor mixins needed except ChatFormatting
 
 ### Step 2 — Texture system: `TextureFormat` → `GpuFormat` (GlTexture_Wrapped, ModernFontAtlas; ~10 errors)
 26.2 removed `com.mojang.blaze3d.textures.TextureFormat`. Replacements (verified in jar):
-- Texture format type is now **`com.mojang.blaze3d.GpuFormat`**. `GpuTexture.getFormat()` returns `GpuFormat`.
-- `GpuTexture` ctor is now `GpuTexture(int usage, String label, GpuFormat, int w, int h, int depth, int mips)`.
-- `CommandEncoder.writeToTexture(...)` **dropped the `Format` argument**. New overloads:
-  - `writeToTexture(GpuTexture, NativeImage)` and `(GpuTexture, NativeImage, int,int,int,int)`
-  - `writeToTexture(GpuTexture, ByteBuffer, int,int,int,int,int,int)` ← drop the old `Format` arg at
-    `ModernFontAtlas.java:209`.
-- `getMaxTextureSize()` / `getBackendName()` moved off the old type — find them on the new GPU device
-  (`RenderSystem.getDevice()` / `GpuDevice`); inspect `com/mojang/blaze3d/systems/GpuDevice.class`.
+- Format type is now **`com.mojang.blaze3d.GpuFormat`** with constants like `RGBA8_UNORM`, `R8_UNORM`
+  (note the `_UNORM` suffix — old `TextureFormat.RGBA8` → `GpuFormat.RGBA8_UNORM`). `GpuTexture.getFormat()` returns `GpuFormat`.
+- `GpuTexture(int usage, String label, GpuFormat, int w, int h, int depth, int mips)`. Prefer creating via
+  `RenderSystem.getDevice().createTexture(String, int usage, GpuFormat, w, h, depth, mips)` rather than `new`.
+- `CommandEncoder.writeToTexture(...)` **dropped the `Format` arg**: `writeToTexture(GpuTexture, NativeImage)`,
+  `(GpuTexture, NativeImage, int,int,int,int)`, `(GpuTexture, ByteBuffer, int,int,int,int,int,int)`.
+  At `ModernFontAtlas.java:209` drop the `Format` argument.
+- `getMaxTextureSize()` → check `GpuDevice` (`RenderSystem.getDevice()`); `getBackendName()` →
+  **`RenderSystem.getBackendDescription()`**.
+- ⚠️ `GlTexture_Wrapped extends GlTexture`: the 26.2 `GlTexture` ctor is now
+  `protected GlTexture(int, String, GpuFormat, int w, int h, int depth, int mips, int, FrameBufferCache)`
+  (extra `int` + `FrameBufferCache`). Subclassing is awkward — consider whether ModernUI still needs to
+  wrap a raw GL handle, or can hold a `GpuTexture`/`GpuTextureView` directly. May need rethink, not a rename.
 
 ### Step 3 — THE BIG ONE: text render pipeline `MultiBufferSource` → render-state (most files; ~30 errors)
 `net.minecraft.client.renderer.MultiBufferSource` was **removed**. Minecraft 26.2 prepares text into
