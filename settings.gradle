@@ -23,9 +23,10 @@ rootProject.name = 'ModernUI-MC'
 
 include 'common'
 
-include 'forge'
-project(':forge').name = "ModernUI-Forge"
-include 'neoforge'
-project(':neoforge').name = "ModernUI-NeoForge"
+// Forge and NeoForge have no Minecraft 26.2 build; this fork targets Fabric only.
+//include 'forge'
+//project(':forge').name = "ModernUI-Forge"
+//include 'neoforge'
+//project(':neoforge').name = "ModernUI-NeoForge"
 include 'fabric'
 project(':fabric').name = "ModernUI-Fabric"
