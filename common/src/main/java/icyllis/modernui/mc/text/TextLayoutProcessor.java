@@ -35,7 +35,7 @@ import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.FormattedCharSink;
 import net.minecraft.util.StringDecomposer;
@@ -105,7 +105,7 @@ public class TextLayoutProcessor {
     /**
      * Font names to use in logical order. Same indexing with {@link #mStyles}.
      */
-    private final ArrayList<ResourceLocation> mFontNames = new ArrayList<>();
+    private final ArrayList<Identifier> mFontNames = new ArrayList<>();
 
     /*
      * Array of temporary style carriers.
@@ -714,15 +714,15 @@ public class TextLayoutProcessor {
      * @param start start index (inclusive) of the text
      * @param limit end index (exclusive) of the text
      * @param isRtl layout direction
-     * @see #handleStyleRun(char[], int, int, boolean, int, ResourceLocation)
+     * @see #handleStyleRun(char[], int, int, boolean, int, Identifier)
      */
     private void handleBidiRun(@Nonnull char[] text, int start, int limit, boolean isRtl) {
         assert start < limit;
         final IntArrayList styles = mStyles;
-        final List<ResourceLocation> fonts = mFontNames;
+        final List<Identifier> fonts = mFontNames;
         int lastPos, currPos;
         int lastStyle, currStyle;
-        ResourceLocation lastFont, currFont;
+        Identifier lastFont, currFont;
         // Style runs are in visual order
         if (isRtl) {
             lastPos = limit - 1;
@@ -828,7 +828,7 @@ public class TextLayoutProcessor {
      * @see FontCollection#itemize(char[], int, int)
      */
     private void handleStyleRun(@Nonnull char[] text, int start, int limit, boolean isRtl,
-                                int styleFlags, ResourceLocation fontName) {
+                                int styleFlags, Identifier fontName) {
         /*if (fastDigit) {
          *//*
          * Convert all digits in the string to a '0' before layout to ensure that any glyphs replaced on the fly

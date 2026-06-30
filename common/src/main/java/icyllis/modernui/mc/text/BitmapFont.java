@@ -48,7 +48,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.minecraft.client.gui.font.glyphs.EmptyGlyph;
 import net.minecraft.client.gui.font.providers.BitmapProvider;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -93,7 +93,7 @@ public class BitmapFont implements Font, AutoCloseable {
 
     public static float sBitmapOffset = 0.5f;
 
-    private final ResourceLocation mName;
+    private final Identifier mName;
 
     private Bitmap mBitmap;
     private final Int2ObjectOpenHashMap<Glyph> mGlyphs = new Int2ObjectOpenHashMap<>();
@@ -113,7 +113,7 @@ public class BitmapFont implements Font, AutoCloseable {
     private final float mScaleFactor;
     private final int[][] mCodepointGrid;
 
-    private BitmapFont(ResourceLocation name, Bitmap bitmap,
+    private BitmapFont(Identifier name, Bitmap bitmap,
                        int[][] grid, int rows, int cols,
                        int height, int ascent) {
         mName = name;

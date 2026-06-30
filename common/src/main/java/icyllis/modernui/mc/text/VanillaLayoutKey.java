@@ -20,7 +20,7 @@ package icyllis.modernui.mc.text;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import javax.annotation.Nonnull;
 
@@ -49,7 +49,7 @@ public class VanillaLayoutKey {
      *
      * @see Style#getFont()
      */
-    private ResourceLocation mFont;
+    private Identifier mFont;
 
     /**
      * A packed field that contains RGB color and appearance-affecting bit flags

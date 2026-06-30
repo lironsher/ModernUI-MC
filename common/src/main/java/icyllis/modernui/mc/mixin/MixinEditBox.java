@@ -23,7 +23,7 @@ import icyllis.modernui.core.UndoManager;
 import icyllis.modernui.core.UndoOwner;
 import icyllis.modernui.mc.*;
 import icyllis.modernui.text.method.WordIterator;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import org.lwjgl.glfw.GLFW;

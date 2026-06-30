@@ -22,7 +22,7 @@ import icyllis.modernui.mc.GradientRectangleRenderState;
 import icyllis.modernui.mc.MuiModApi;
 import icyllis.modernui.mc.text.*;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;

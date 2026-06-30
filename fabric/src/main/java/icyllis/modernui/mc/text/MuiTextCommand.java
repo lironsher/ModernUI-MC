@@ -26,16 +26,16 @@ import icyllis.modernui.graphics.text.Font;
 import icyllis.modernui.mc.ModernUIMod;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.arguments.ComponentArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class MuiTextCommand {
 
-    public static final ResourceLocation JB_MONO = ModernUIMod.location("jetbrains-mono-medium");
+    public static final Identifier JB_MONO = ModernUIMod.location("jetbrains-mono-medium");
 
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher,
                                 CommandBuildContext context) {

@@ -25,7 +25,7 @@ import icyllis.modernui.core.Core;
 import icyllis.modernui.mc.ModernUIClient;
 import icyllis.modernui.mc.ModernUIMod;
 import icyllis.modernui.mc.fabric.UIManagerFabric;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.TimeSource;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.Configuration;
@@ -54,7 +54,7 @@ public class MixinRenderSystem {
 
     @Inject(method = "initRenderer", at = @At("TAIL"), remap = false)
     private static void onInitRenderer(long window, int debugLevel, boolean debugSync,
-                                       BiFunction<ResourceLocation, ShaderType, String> defaultShaderSource,
+                                       BiFunction<Identifier, ShaderType, String> defaultShaderSource,
                                        boolean enableDebugLabels, CallbackInfo ci) {
         Core.initialize();
         ContextOptions options = new ContextOptions();

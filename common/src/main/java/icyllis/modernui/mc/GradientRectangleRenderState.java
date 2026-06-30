@@ -24,7 +24,7 @@ import icyllis.modernui.graphics.MathUtil;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.gui.render.state.GuiElementRenderState;
-import org.joml.Matrix3x2f;
+import org.joml.Matrix3x2fc;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -38,7 +38,7 @@ import javax.annotation.Nullable;
 public record GradientRectangleRenderState(
         @Nonnull RenderPipeline pipeline,
         @Nonnull TextureSetup textureSetup,
-        @Nonnull Matrix3x2f pose,
+        @Nonnull Matrix3x2fc pose,
         float left, float top, float right, float bottom,
         int colorUL, int colorUR, int colorLR, int colorLL,
         @Nullable ScreenRectangle scissorArea,
@@ -53,7 +53,7 @@ public record GradientRectangleRenderState(
      */
     public GradientRectangleRenderState(@Nonnull RenderPipeline pipeline,
                                         @Nonnull TextureSetup textureSetup,
-                                        @Nonnull Matrix3x2f pose,
+                                        @Nonnull Matrix3x2fc pose,
                                         float left, float top, float right, float bottom,
                                         int colorUL, int colorUR, int colorLR, int colorLL,
                                         @Nullable ScreenRectangle scissorArea) {
@@ -65,11 +65,11 @@ public record GradientRectangleRenderState(
     }
 
     @Override
-    public void buildVertices(@Nonnull VertexConsumer consumer, float z) {
-        consumer.addVertexWith2DPose(pose, right, bottom, z).setColor(colorLR);
-        consumer.addVertexWith2DPose(pose, right, top, z).setColor(colorUR);
-        consumer.addVertexWith2DPose(pose, left, top, z).setColor(colorUL);
-        consumer.addVertexWith2DPose(pose, left, bottom, z).setColor(colorLL);
+    public void buildVertices(@Nonnull VertexConsumer consumer) {
+        consumer.addVertexWith2DPose(pose, right, bottom).setColor(colorLR);
+        consumer.addVertexWith2DPose(pose, right, top).setColor(colorUR);
+        consumer.addVertexWith2DPose(pose, left, top).setColor(colorUL);
+        consumer.addVertexWith2DPose(pose, left, bottom).setColor(colorLL);
     }
 
     /**
@@ -79,15 +79,15 @@ public record GradientRectangleRenderState(
     //@formatter:off
     @Nullable
     public static ScreenRectangle getBounds(float left, float top, float right, float bottom,
-                                            @Nonnull Matrix3x2f pose, @Nullable ScreenRectangle scissor) {
-        float x1 = pose.m00 * left +  pose.m10 * top    + pose.m20;
-        float y1 = pose.m01 * left +  pose.m11 * top    + pose.m21;
-        float x2 = pose.m00 * right + pose.m10 * top    + pose.m20;
-        float y2 = pose.m01 * right + pose.m11 * top    + pose.m21;
-        float x3 = pose.m00 * left +  pose.m10 * bottom + pose.m20;
-        float y3 = pose.m01 * left +  pose.m11 * bottom + pose.m21;
-        float x4 = pose.m00 * right + pose.m10 * bottom + pose.m20;
-        float y4 = pose.m01 * right + pose.m11 * bottom + pose.m21;
+                                            @Nonnull Matrix3x2fc pose, @Nullable ScreenRectangle scissor) {
+        float x1 = pose.m00() * left +  pose.m10() * top    + pose.m20();
+        float y1 = pose.m01() * left +  pose.m11() * top    + pose.m21();
+        float x2 = pose.m00() * right + pose.m10() * top    + pose.m20();
+        float y2 = pose.m01() * right + pose.m11() * top    + pose.m21();
+        float x3 = pose.m00() * left +  pose.m10() * bottom + pose.m20();
+        float y3 = pose.m01() * left +  pose.m11() * bottom + pose.m21();
+        float x4 = pose.m00() * right + pose.m10() * bottom + pose.m20();
+        float y4 = pose.m01() * right + pose.m11() * bottom + pose.m21();
 
         // Minecraft's bounds calculation is wrong,
         // width should be: ceil(right) - floor(left)

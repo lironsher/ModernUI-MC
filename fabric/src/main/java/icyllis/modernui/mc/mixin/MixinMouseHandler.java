@@ -60,7 +60,7 @@ public class MixinMouseHandler {
 
     @Inject(method = "onPress", at = @At("TAIL"))
     private void onMouseButtonPost(long handle, int button, int action, int mods, CallbackInfo ci) {
-        if (handle == minecraft.getWindow().getWindow()) {
+        if (handle == minecraft.getWindow().handle()) {
             UIManager.getInstance().onPostMouseInput(button, action, mods);
         }
     }

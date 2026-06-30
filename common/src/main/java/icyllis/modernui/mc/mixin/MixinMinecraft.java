@@ -96,7 +96,7 @@ public abstract class MixinMinecraft {
                 !isWindowActive()) {
             if (BlurHandler.sFramerateMinimized != 0 &&
                     BlurHandler.sFramerateMinimized < BlurHandler.sFramerateInactive &&
-                    GLFW.glfwGetWindowAttrib(window.getWindow(), GLFW.GLFW_ICONIFIED) != 0) {
+                    GLFW.glfwGetWindowAttrib(window.handle(), GLFW.GLFW_ICONIFIED) != 0) {
                 info.setReturnValue(Math.min(
                         BlurHandler.sFramerateMinimized,
                         window.getFramerateLimit()

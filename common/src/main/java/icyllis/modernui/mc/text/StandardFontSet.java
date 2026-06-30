@@ -26,9 +26,9 @@ import icyllis.modernui.graphics.text.*;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.minecraft.client.gui.font.*;
 import net.minecraft.client.gui.font.glyphs.*;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.Nonnull;
@@ -71,7 +71,7 @@ public class StandardFontSet extends FontSet {
     private final FontPaint mStandardPaint = new FontPaint();
 
     public StandardFontSet(@Nonnull TextureManager texMgr,
-                           @Nonnull ResourceLocation fontName) {
+                           @Nonnull Identifier fontName) {
         super(texMgr, fontName); // <- unused
 
         mStandardPaint.setFontStyle(FontPaint.NORMAL);
@@ -273,7 +273,7 @@ public class StandardFontSet extends FontSet {
     public static class StandardBakedGlyph extends BakedGlyph {
 
         private static final GlyphRenderTypes EMPTY_TYPES =
-                GlyphRenderTypes.createForColorTexture(ResourceLocation.withDefaultNamespace(""));
+                GlyphRenderTypes.createForColorTexture(Identifier.withDefaultNamespace(""));
 
         // null for TTF fonts, non-null for bitmap fonts
         @Nullable

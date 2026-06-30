@@ -39,6 +39,7 @@ subprojects {
     tasks.withType(JavaCompile).configureEach {
         it.options.encoding = "UTF-8"
         it.options.release.set(21)
+        it.options.compilerArgs.addAll(["-Xmaxerrs", "2000", "-Xmaxwarns", "50"])
     }
 
     java {

@@ -33,7 +33,7 @@ import net.minecraft.client.gui.screens.inventory.tooltip.*;
 import net.minecraft.client.renderer.*;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.*;
 import net.minecraft.world.item.*;
 import org.jetbrains.annotations.ApiStatus;
@@ -529,7 +529,7 @@ public final class TooltipRenderer implements ScrollController.IListener {
                             @Nonnull List<ClientTooltipComponent> list, int mouseX, int mouseY,
                             @Nonnull Font font, int screenWidth, int screenHeight,
                             float partialX, float partialY, @Nullable ClientTooltipPositioner positioner,
-                            @Nullable ResourceLocation tooltipStyle) {
+                            @Nullable Identifier tooltipStyle) {
         mDraw = true;
 
         if (itemStack != mLastSeenItem || mNumDrawsInThisFrame > 0) {

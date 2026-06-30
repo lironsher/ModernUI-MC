@@ -405,7 +405,7 @@ public class GlyphManagerForge {
     public TexturedGlyph lookupEmoji(int codePoint) {
         return mEmojiMap.computeIfAbsent(codePoint, l -> {
             if (emojiTexture == 0) {
-                ResourceLocation resourceLocation = new ResourceLocation(ModernUI.ID, "textures/gui/emoji.png");
+                Identifier resourceLocation = new Identifier(ModernUI.ID, "textures/gui/emoji.png");
                 AbstractTexture texture = new SimpleTexture(resourceLocation);
                 Minecraft.getInstance().getTextureManager().register(resourceLocation, texture);
                 emojiTexture = texture.getId();

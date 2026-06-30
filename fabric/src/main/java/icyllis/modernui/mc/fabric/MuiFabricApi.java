@@ -34,11 +34,11 @@ import net.minecraft.client.gui.render.state.pip.PictureInPictureRenderState;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.RenderStateShard;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderSetup;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.Rarity;
@@ -83,13 +83,13 @@ public final class MuiFabricApi extends MuiModApi {
     }
 
     @Override
-    public void loadEffect(GameRenderer gr, ResourceLocation effect) {
+    public void loadEffect(GameRenderer gr, Identifier effect) {
         ((AccessGameRenderer) gr).invokeSetPostEffect(effect);
     }
 
     /*@Override
     public ShaderInstance makeShaderInstance(ResourceProvider resourceProvider,
-                                             ResourceLocation resourceLocation,
+                                             Identifier resourceLocation,
                                              VertexFormat vertexFormat) throws IOException {
         return new FabricShaderProgram(resourceProvider, resourceLocation, vertexFormat);
     }*/
@@ -134,21 +134,7 @@ public final class MuiFabricApi extends MuiModApi {
     }
 
     @Override
-    public RenderType createRenderType(String name, int bufferSize,
-                                       boolean affectsCrumbling, boolean sortOnUpload,
-                                       RenderPipeline renderPipeline,
-                                       @Nullable RenderStateShard textureState,
-                                       boolean lightmap) {
-        var builder = RenderType.CompositeState.builder();
-        if (textureState != null) {
-            builder.setTextureState((RenderStateShard.EmptyTextureStateShard) textureState);
-        }
-        if (lightmap) {
-            builder.setLightmapState(RenderStateShard.LIGHTMAP);
-        }
-        return RenderType.create(
-                name, bufferSize, affectsCrumbling, sortOnUpload, renderPipeline,
-                builder.createCompositeState(false)
-        );
+    public RenderType createRenderType(String name, RenderSetup allState) {
+        return RenderType.create(name, allState);
     }
 }

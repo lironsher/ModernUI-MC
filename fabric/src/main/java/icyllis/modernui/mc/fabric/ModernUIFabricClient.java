@@ -45,7 +45,7 @@ import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.resources.language.LanguageManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.Mth;
@@ -95,7 +95,7 @@ public class ModernUIFabricClient extends ModernUIClient implements ClientModIni
         Image.setLegacyFactory(ImageStore.getInstance());
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new IdentifiableResourceReloadListener() {
             @Override
-            public ResourceLocation getFabricId() {
+            public Identifier getFabricId() {
                 return ModernUIMod.location("resources");
             }
 
@@ -110,7 +110,7 @@ public class ModernUIFabricClient extends ModernUIClient implements ClientModIni
         });
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
             @Override
-            public ResourceLocation getFabricId() {
+            public Identifier getFabricId() {
                 return ModernUIMod.location("client");
             }
 
@@ -221,7 +221,7 @@ public class ModernUIFabricClient extends ModernUIClient implements ClientModIni
             // see MixinFontManager in another case
             ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new IdentifiableResourceReloadListener() {
                 @Override
-                public ResourceLocation getFabricId() {
+                public Identifier getFabricId() {
                     return ModernUIMod.location("font");
                 }
 

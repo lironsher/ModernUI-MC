@@ -35,7 +35,7 @@ import icyllis.modernui.mc.mixin.MixinChatFormatting;
 import icyllis.modernui.resources.ResourcesLoader;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -45,11 +45,11 @@ import net.minecraft.client.gui.render.state.pip.PictureInPictureRenderState;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.RenderStateShard;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderSetup;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -440,10 +440,10 @@ public abstract class MuiModApi {
     public abstract boolean isGLVersionPromoted();
 
     @ApiStatus.Internal
-    public abstract void loadEffect(GameRenderer gr, ResourceLocation effect);
+    public abstract void loadEffect(GameRenderer gr, Identifier effect);
 
     /*public abstract ShaderInstance makeShaderInstance(ResourceProvider resourceProvider,
-                                                      ResourceLocation resourceLocation,
+                                                      Identifier resourceLocation,
                                                       VertexFormat vertexFormat) throws IOException;*/
 
     public abstract boolean isKeyBindingMatches(KeyMapping keyMapping, InputConstants.Key key);
@@ -461,12 +461,7 @@ public abstract class MuiModApi {
     @Nullable
     public abstract ScreenRectangle peekScissorStack(GuiGraphics graphics);
 
-    // textureState must subclass RenderStateShard.EmptyTextureStateShard, null = NO_TEXTURE
-    public abstract RenderType createRenderType(String name, int bufferSize,
-                                                boolean affectsCrumbling, boolean sortOnUpload,
-                                                RenderPipeline renderPipeline,
-                                                @Nullable RenderStateShard textureState,
-                                                boolean lightmap);
+    public abstract RenderType createRenderType(String name, RenderSetup allState);
 
     /*
      * Registers a callback to be called when {@link org.lwjgl.glfw.GLFWScrollCallback} is called.

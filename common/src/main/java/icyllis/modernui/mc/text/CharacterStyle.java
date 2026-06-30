@@ -175,6 +175,36 @@ public class CharacterStyle {
     }
 
     /**
+     * Almost an inverse of {@link #flatten(Style)}, used for compatibility reasons.
+     */
+    @Nonnull
+    public static Style unflatten(int flags) {
+        Style style = Style.EMPTY;
+        if ((flags & IMPLICIT_COLOR_MASK) == 0) {
+            style = style.withColor(flags & COLOR_MASK);
+        }
+        if ((flags & BOLD_MASK) != 0) {
+            style = style.withBold(true);
+        }
+        if ((flags & ITALIC_MASK) != 0) {
+            style = style.withItalic(true);
+        }
+        if ((flags & UNDERLINE_MASK) != 0) {
+            style = style.withUnderlined(true);
+        }
+        if ((flags & STRIKETHROUGH_MASK) != 0) {
+            style = style.withStrikethrough(true);
+        }
+        if ((flags & OBFUSCATED_MASK) != 0) {
+            style = style.withObfuscated(true);
+        }
+        if ((flags & NO_SHADOW_MASK) != 0) {
+            style = style.withShadowColor(0);
+        }
+        return style;
+    }
+
+    /**
      * Returns if two styles can produce a visual change. That is, appearance flags
      * or font collection are different.
      *
@@ -188,6 +218,18 @@ public class CharacterStyle {
                 a.isObfuscated() == b.isObfuscated() &&
                 Objects.equals(a.getColor(), b.getColor()) &&
                 Objects.equals(a.getShadowColor(), b.getShadowColor()) &&
+                Objects.equals(a.getFont(), b.getFont()));
+    }
+
+    /**
+     * Returns if two styles can produce a font metric change. That is, font style
+     * or font collection are different.
+     *
+     * @see #flatten(Style)
+     */
+    public static boolean equalsForTextMeasurement(@Nonnull Style a, @Nonnull Style b) {
+        return a == b || (a.isBold() == b.isBold() &&
+                a.isItalic() == b.isItalic() &&
                 Objects.equals(a.getFont(), b.getFont()));
     }
 
