@@ -54,6 +54,10 @@ dependencies {
     implementation "com.terraformersmc:modmenu:20.0.0-beta.4"
     api "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:26.2.1"
 
+    // VulkanMod optional integration: compileOnly (the common sources are recompiled here).
+    // The only published build is 26.1.2, which crashes on 26.2, so it must NOT load at runtime.
+    compileOnly "maven.modrinth:JYQhtZtO:PNODQNIn"
+
     implementation project(':common')
 
     ["dev.icyllis:arc3d-compiler"].each {

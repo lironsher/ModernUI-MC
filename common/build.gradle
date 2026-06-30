@@ -26,8 +26,9 @@ dependencies {
         transitive = false
     }
 
-    // VulkanMod_26.1.2-0.6.6.jar
-    api("maven.modrinth:JYQhtZtO:PNODQNIn")
+    // VulkanMod_26.1.2-0.6.6.jar — optional integration; compileOnly so the 26.1.2 build
+    // (no 26.2 release yet) is NOT loaded as a mod at runtime (its mixins crash on 26.2).
+    compileOnly("maven.modrinth:JYQhtZtO:PNODQNIn")
     compileOnly("org.lwjgl:lwjgl-vulkan:3.4.1")
 }
 
