@@ -4,14 +4,20 @@ Branch: `feat/mc-26.2` (fork: `lironsher/ModernUI-MC`). Target: produce a workin
 **Fabric** ModernUI jar for MC **26.2** so the Poofy mod can use the in-game UI on its
 `26.2.x` Stonecutter variant.
 
-## TL;DR status
-- ✅ Build infra retargeted to 26.2 and **all dependencies resolve**. Toolchain works.
-- ✅ Forge/NeoForge dropped (no 26.2 build exists for either). Fabric-only.
-- ✅ All **mechanical API renames** landed and verified (2 commits below).
-- ⛔ **53 unique compile errors remain**, and they are the *hard* part: Minecraft 26.2
-  replaced its **immediate-mode rendering** (`MultiBufferSource`, `Font.drawInBatch`,
-  `TextureFormat`) with a **retained render-state pipeline**. ModernUI's text engine is
-  built on the old API and must be reworked. This is a real port, not a recompile.
+## TL;DR status (updated — 142 → 22 errors)
+- ✅ Build infra retargeted to 26.2, all deps resolve, Fabric-only (Forge/NeoForge dropped).
+- ✅ Mechanical renames, screen/overlay/chat relocation (Gui/Hud), textures (`GpuFormat`),
+  and shader/uniform pipeline (`RenderPipeline.Builder` bind-groups) — all landed & pushed, compile clean.
+- ⛔ **22 unique errors remain, all in ONE coherent area: the legacy in-world (immediate-mode) text path.**
+  26.2 deleted `MultiBufferSource`, `Font.drawInBatch`, and `Minecraft.renderBuffers()`. The **GUI** text
+  path already runs on 26.x render-state (`ModernPreparedText`/`MixinGuiTextRenderState`); only the
+  **in-world** path is unported. Files: `ModernTextRenderer`, `TextLayout`, `GlyphManagerForge`,
+  `text/mixin/MixinFontRenderer`, `text/mixin/AccessBufferSource`.
+- ⚠️ **Needs the dev client** to finish: in-world text now goes through
+  `OrderedSubmitNodeCollector.submitText(...)`; reimplement ModernUI's in-world rendering onto it
+  (mirror the done GUI path) and delete the obsolete `MixinFontRenderer`/`AccessBufferSource`. Also
+  verify Step-4 shader **bind-group order / GLSL `layout(set=)` indices** at runtime (mirrored from vanilla,
+  unverified), and re-point `MixinMinecraft`'s stale screen shadow/inject to `Gui.setScreen` (see Step 1).
 
 ## Environment / how to build
 ```bash
