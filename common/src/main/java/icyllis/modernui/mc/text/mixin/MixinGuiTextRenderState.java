@@ -26,7 +26,7 @@ import icyllis.modernui.mc.text.TextRenderType;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.render.state.GuiTextRenderState;
 import net.minecraft.util.FormattedCharSequence;
-import org.joml.Matrix3x2f;
+import org.joml.Matrix3x2fc;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -36,29 +36,30 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(GuiTextRenderState.class)
 public class MixinGuiTextRenderState {
 
+    // 1.21.11: pose is now an immutable Matrix3x2fc view; we no longer mutate it in place.
     @Shadow
     @Final
-    public Matrix3x2f pose;
+    public Matrix3x2fc pose;
 
     @Redirect(method = "ensurePrepared",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Font;prepareText" +
-                    "(Lnet/minecraft/util/FormattedCharSequence;FFIZI)Lnet/minecraft/client/gui/Font$PreparedText;"))
+                    "(Lnet/minecraft/util/FormattedCharSequence;FFIZZI)Lnet/minecraft/client/gui/Font$PreparedText;"))
     private Font.PreparedText onPrepareText(Font font, FormattedCharSequence text,
                                             float x, float y, int color, boolean dropShadow,
-                                            int backgroundColor) {
+                                            boolean includeEmpty, int backgroundColor) {
         TextLayout layout = TextLayoutEngine.getInstance().lookupFormattedLayout(text);
-        Matrix3x2f ctm = pose;
+        Matrix3x2fc ctm = pose;
         int mode;
         boolean isPureTranslation;
-        if (!MathUtil.isApproxZero(ctm.m01) ||
-                !MathUtil.isApproxZero(ctm.m10) ||
-                !MathUtil.isApproxEqual(ctm.m00, 1.0f) ||
-                !MathUtil.isApproxEqual(ctm.m11, 1.0f)) {
+        if (!MathUtil.isApproxZero(ctm.m01()) ||
+                !MathUtil.isApproxZero(ctm.m10()) ||
+                !MathUtil.isApproxEqual(ctm.m00(), 1.0f) ||
+                !MathUtil.isApproxEqual(ctm.m11(), 1.0f)) {
             isPureTranslation = false;
             if (ModernTextRenderer.sComputeDeviceFontSize &&
-                    MathUtil.isApproxZero(ctm.m01) &&
-                    MathUtil.isApproxZero(ctm.m10) &&
-                    MathUtil.isApproxEqual(ctm.m00, ctm.m11)) {
+                    MathUtil.isApproxZero(ctm.m01()) &&
+                    MathUtil.isApproxZero(ctm.m10()) &&
+                    MathUtil.isApproxEqual(ctm.m00(), ctm.m11())) {
                 mode = TextRenderType.MODE_UNIFORM_SCALE;
             } else if (ModernTextRenderer.sAllowSDFTextIn2D) {
                 mode = TextRenderType.MODE_SDF_FILL;
@@ -71,17 +72,17 @@ public class MixinGuiTextRenderState {
         }
         // compute exact font size and position
         float uniformScale = 1;
+        // pixel-snap translation extracted from the (immutable) pose; the matrix translation
+        // is zeroed and these folded into x/y later, at ModernPreparedText.submitRuns time.
+        float xAdj = 0, yAdj = 0;
         if (ModernTextRenderer.sComputeDeviceFontSize &&
                 (isPureTranslation || mode == TextRenderType.MODE_UNIFORM_SCALE)) {
             // uniform scale case
             // extract the translation vector for snapping to pixel grid
-            x += ctm.m20 / ctm.m00;
-            y += ctm.m21 / ctm.m11;
-            // we modified this.pose
-            ctm.m20 = 0;
-            ctm.m21 = 0;
+            xAdj = ctm.m20() / ctm.m00();
+            yAdj = ctm.m21() / ctm.m11();
             // total scale
-            uniformScale = ctm.m00;
+            uniformScale = ctm.m00();
             if (MathUtil.isApproxEqual(uniformScale, 1)) {
                 mode = TextRenderType.MODE_NORMAL;
             } else {
@@ -95,6 +96,6 @@ public class MixinGuiTextRenderState {
                 }
             }
         }
-        return layout.prepareTextWithDensity(x, y, color, dropShadow, mode, uniformScale, backgroundColor);
+        return layout.prepareTextWithDensity(x, y, color, dropShadow, mode, uniformScale, backgroundColor, xAdj, yAdj);
     }
 }

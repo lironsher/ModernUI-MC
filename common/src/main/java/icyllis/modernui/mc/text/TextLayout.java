@@ -660,7 +660,7 @@ public class TextLayout {
     public ModernPreparedText prepareTextWithDensity(float x, float top,
                                                      final int color, final boolean dropShadow,
                                                      int preferredMode, final float uniformScale,
-                                                     final int bgColor) {
+                                                     final int bgColor, float xAdj, float yAdj) {
         final float density;
         final GLBakedGlyph[] glyphs;
         if (preferredMode == TextRenderType.MODE_SDF_FILL) {
@@ -681,7 +681,7 @@ public class TextLayout {
         }
 
         return new ModernPreparedText(x, top, color, dropShadow, preferredMode, bgColor, density, glyphs,
-                this);
+                this, xAdj, yAdj);
     }
 
     /**

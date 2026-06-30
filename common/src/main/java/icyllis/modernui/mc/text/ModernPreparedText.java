@@ -45,7 +45,7 @@ public class ModernPreparedText implements Font.PreparedText {
 
     public static final ModernPreparedText EMPTY = new ModernPreparedText(
             1, 0, false, 0, 0,
-            0, 0, null,
+            0, 0, 0, 0, null,
             new ArrayList<>(), false, 0,
             null, null, null
     );
@@ -57,6 +57,10 @@ public class ModernPreparedText implements Font.PreparedText {
     private final int bgColor;
     private final float x;
     private final float top;
+    // pixel-snap translation extracted from the GUI pose (uniform-scale/translation case);
+    // the matrix translation is zeroed at submit time and these are folded into x/top instead
+    private final float xAdj;
+    private final float yAdj;
     private final ScreenRectangle bounds;
     private final ArrayList<TextRun> runs;
     private final boolean hasEffect;
@@ -66,7 +70,7 @@ public class ModernPreparedText implements Font.PreparedText {
     private final int[] flags;
 
     ModernPreparedText(float density, float shadowOffset, boolean dropShadow, int color,
-                       int bgColor, float x, float top, ScreenRectangle bounds,
+                       int bgColor, float x, float top, float xAdj, float yAdj, ScreenRectangle bounds,
                        ArrayList<TextRun> runs, boolean hasEffect, float totalAdvance,
                        GLBakedGlyph[] glyphs, float[] positions, int[] flags) {
         this.density = density;
@@ -76,6 +80,8 @@ public class ModernPreparedText implements Font.PreparedText {
         this.bgColor = bgColor;
         this.x = x;
         this.top = top;
+        this.xAdj = xAdj;
+        this.yAdj = yAdj;
         this.bounds = bounds;
         this.runs = runs;
         this.hasEffect = hasEffect;
@@ -87,7 +93,8 @@ public class ModernPreparedText implements Font.PreparedText {
 
     ModernPreparedText(float x, float top, int color, boolean dropShadow,
                        int preferredMode, int bgColor, float density,
-                       GLBakedGlyph[] glyphs, TextLayout layout) {
+                       GLBakedGlyph[] glyphs, TextLayout layout,
+                       float xAdj, float yAdj) {
 
         final float invDensity = 1.0f / density;
         float shadowOffset = 0;
@@ -229,6 +236,8 @@ public class ModernPreparedText implements Font.PreparedText {
         this.bgColor = bgColor;
         this.x = x;
         this.top = top;
+        this.xAdj = xAdj;
+        this.yAdj = yAdj;
         this.bounds = finalBounds;
         this.runs = textRuns;
         this.hasEffect = layout.hasEffect();
@@ -252,6 +261,19 @@ public class ModernPreparedText implements Font.PreparedText {
     @SuppressWarnings("ForLoopReplaceableByForEach")
     public void submitRuns(GuiRenderState renderState, Matrix3x2fc pose,
                            @Nullable ScreenRectangle scissor) {
+        float x = this.x;
+        float top = this.top;
+        if (xAdj != 0 || yAdj != 0) {
+            // The pixel-snap translation was extracted from the pose; zero the pose
+            // translation (immutable view -> mutable copy) and fold the snap into x/top
+            // so glyphs land on exact pixel centers.
+            var newPose = new Matrix3x2f(pose);
+            newPose.m20 = 0;
+            newPose.m21 = 0;
+            x += xAdj;
+            top += yAdj;
+            pose = newPose;
+        }
         if ((bgColor & 0xFF000000) != 0) {
             // this is only used by CartographyTableScreen, emit as normal fills
             renderState.submitGlyphToCurrentLayer(
