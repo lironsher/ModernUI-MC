@@ -18,14 +18,13 @@
 
 package icyllis.modernui.mc.mixin;
 
-import com.mojang.blaze3d.shaders.ShaderType;
+import com.mojang.blaze3d.shaders.ShaderSource;
 import com.mojang.blaze3d.systems.RenderSystem;
 import icyllis.arc3d.engine.ContextOptions;
 import icyllis.modernui.core.Core;
 import icyllis.modernui.mc.ModernUIClient;
 import icyllis.modernui.mc.ModernUIMod;
 import icyllis.modernui.mc.fabric.UIManagerFabric;
-import net.minecraft.resources.Identifier;
 import net.minecraft.util.TimeSource;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.Configuration;
@@ -37,7 +36,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Objects;
-import java.util.function.BiFunction;
 
 @Mixin(RenderSystem.class)
 public class MixinRenderSystem {
@@ -54,7 +52,7 @@ public class MixinRenderSystem {
 
     @Inject(method = "initRenderer", at = @At("TAIL"), remap = false)
     private static void onInitRenderer(long window, int debugLevel, boolean debugSync,
-                                       BiFunction<Identifier, ShaderType, String> defaultShaderSource,
+                                       ShaderSource defaultShaderSource,
                                        boolean enableDebugLabels, CallbackInfo ci) {
         Core.initialize();
         ContextOptions options = new ContextOptions();
