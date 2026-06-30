@@ -24,7 +24,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import icyllis.modernui.graphics.MathUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Sheets;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.FormattedText;
@@ -89,123 +88,6 @@ public final class ModernTextRenderer {
         mEngine = engine;
     }
 
-    public float drawText(@Nonnull String text, float x, float y, int color, boolean dropShadow,
-                          @Nonnull Matrix4fc matrix, @Nonnull MultiBufferSource source,
-                          Font.DisplayMode displayMode, int colorBackground, int packedLight) {
-        if (text.isEmpty()) {
-            return x;
-        }
-
-        TextLayout layout = mEngine.lookupVanillaLayout(text);
-        x += drawText(layout, x, y, color, dropShadow, matrix, source, displayMode, colorBackground, packedLight);
-        return x;
-    }
-
-    public float drawText(@Nonnull FormattedText text, float x, float y, int color, boolean dropShadow,
-                          @Nonnull Matrix4fc matrix, @Nonnull MultiBufferSource source,
-                          Font.DisplayMode displayMode, int colorBackground, int packedLight) {
-        if (text == CommonComponents.EMPTY || text == FormattedText.EMPTY) {
-            return x;
-        }
-
-        TextLayout layout = mEngine.lookupFormattedLayout(text);
-        x += drawText(layout, x, y, color, dropShadow, matrix, source, displayMode, colorBackground, packedLight);
-        return x;
-    }
-
-    public float drawText(@Nonnull FormattedCharSequence text, float x, float y, int color, boolean dropShadow,
-                          @Nonnull Matrix4fc matrix, @Nonnull MultiBufferSource source,
-                          Font.DisplayMode displayMode, int colorBackground, int packedLight) {
-        if (text == FormattedCharSequence.EMPTY) {
-            return x;
-        }
-
-        TextLayout layout = mEngine.lookupFormattedLayout(text);
-        x += drawText(layout, x, y, color, dropShadow, matrix, source, displayMode, colorBackground, packedLight);
-        return x;
-    }
-
-    public float drawText(@Nonnull TextLayout layout, float x, float y, int color, boolean dropShadow,
-                          @Nonnull Matrix4fc matrix, @Nonnull MultiBufferSource source,
-                          Font.DisplayMode displayMode, int colorBackground, int packedLight) {
-        // ensure alpha, color can be ARGB, or can be RGB
-        // we check if alpha <= 1, then make alpha = 255 (fully opaque)
-        /*if ((color & 0xfe000000) == 0) {
-            color |= 0xff000000;
-        }*/
-
-        int a = color >>> 24;
-        int r = color >> 16 & 0xff;
-        int g = color >> 8 & 0xff;
-        int b = color & 0xff;
-
-        int mode = chooseMode(matrix, displayMode);
-        boolean polygonOffset = displayMode == Font.DisplayMode.POLYGON_OFFSET;
-
-        /*if (layout.hasColorEmoji() && source instanceof MultiBufferSource.BufferSource) {
-            // performance impact
-            ((MultiBufferSource.BufferSource) source).endBatch(Sheets.signSheet());
-        }*/
-        // copy the matrix when needed
-        //boolean matrixIsCopied = false;
-        // compute exact font size and position
-        float uniformScale = 1;
-        /*if (sComputeDeviceFontSize &&
-                ((mode == TextRenderType.MODE_NORMAL && (matrix.properties() & Matrix4f.PROPERTY_TRANSLATION) != 0) ||
-                        mode == TextRenderType.MODE_UNIFORM_SCALE)) {
-            // here we are in 2D, and have scale/translate only ctm (not bilinear fallback)
-            Matrix4f projection = new Matrix4f(); // RenderSystem.getProjectionMatrix();
-            if (RenderSystem.getProjectionType() == ProjectionType.ORTHOGRAPHIC &&
-                    projection.m23() == 0.0f) { // fast check it's a 2D projection
-                // find additional scaling in projection
-                Window window = Minecraft.getInstance().getWindow();
-                float projScaleX = (projection.m00() * window.getWidth()) / (2.0f * layout.mCreatedResLevel);
-                // in OpenGL this is negative, in Vulkan this is positive
-                float projScaleY = Math.abs((projection.m11() * window.getHeight()) / (2.0f * layout.mCreatedResLevel));
-                if (MathUtil.isApproxEqual(projScaleX, projScaleY)) {
-                    // uniform scale case
-                    matrix = new Matrix4f(matrix);
-                    matrixIsCopied = true;
-                    // extract the translation vector for snapping to pixel grid
-                    x += matrix.m30() / matrix.m00();
-                    y += matrix.m31() / matrix.m11();
-                    matrix.m30(0);
-                    matrix.m31(0);
-                    // total scale
-                    uniformScale = matrix.m00() * projScaleX;
-                    if (MathUtil.isApproxEqual(uniformScale, 1)) {
-                        mode = TextRenderType.MODE_NORMAL;
-                    } else {
-                        float upperLimit = Math.max(1.0f,
-                                (float) TextLayoutEngine.sMinPixelDensityForSDF / layout.mCreatedResLevel);
-                        if (uniformScale <= upperLimit) {
-                            // uniform scale smaller and not too large
-                            mode = TextRenderType.MODE_UNIFORM_SCALE;
-                        } else {
-                            mode = sAllowSDFTextIn2D ? TextRenderType.MODE_SDF_FILL : TextRenderType.MODE_NORMAL;
-                        }
-                    }
-                } else {
-                    // projection is not uniformly scaled
-                    mode = sAllowSDFTextIn2D ? TextRenderType.MODE_SDF_FILL : TextRenderType.MODE_NORMAL;
-                }
-            } else {
-                // 3D projection
-                mode = sAllowSDFTextIn2D ? TextRenderType.MODE_SDF_FILL : TextRenderType.MODE_NORMAL;
-            }
-        }*/
-        if (dropShadow && sAllowShadow) {
-            layout.drawText(matrix, source, x, y, r >> 2, g >> 2, b >> 2, a, true,
-                    mode, polygonOffset, uniformScale, colorBackground, packedLight);
-            var newMatrix = new Matrix4f(matrix);
-            newMatrix.translate(SHADOW_OFFSET);
-            matrix = newMatrix;
-        }
-
-        return layout.drawText(matrix, source, x, y, r, g, b, a, false,
-                mode, polygonOffset, uniformScale, colorBackground, packedLight);
-    }
-
     public int chooseMode(Matrix4fc ctm, Font.DisplayMode displayMode) {
         if (displayMode == Font.DisplayMode.SEE_THROUGH) {
             return TextRenderType.MODE_SEE_THROUGH;
@@ -265,47 +147,6 @@ public final class ModernTextRenderer {
 
         layout.drawTextOutline(matrix, source, x, y, or, og, ob, oa, LightTexture.FULL_BRIGHT);
     }*/
-
-    public void drawText8xOutline(@Nonnull FormattedCharSequence text, float x, float y,
-                                  int color, int outlineColor, @Nonnull Matrix4fc matrix,
-                                  @Nonnull MultiBufferSource source, int packedLight) {
-        if (text == FormattedCharSequence.EMPTY) {
-            return;
-        }
-
-        boolean isBlack = (color & 0xFFFFFF) == 0;
-        if (isBlack) {
-            color = outlineColor;
-        }
-        int a = color >>> 24;
-        int r = color >> 16 & 0xff;
-        int g = color >> 8 & 0xff;
-        int b = color & 0xff;
-
-        TextLayout layout = mEngine.lookupFormattedLayout(text);
-        /*if (layout.hasColorEmoji() && source instanceof MultiBufferSource.BufferSource) {
-            // performance impact
-            ((MultiBufferSource.BufferSource) source).endBatch(Sheets.signSheet());
-        }*/
-
-        layout.drawText(matrix, source, x, y, r, g, b, a, false,
-                TextRenderType.MODE_SDF_FILL, false, 1, 0, packedLight);
-
-        // disable outline if either text color is BLACK or SDF shader is unavailable
-        if (isBlack ||
-                (TextLayoutEngine.sCurrentInWorldRendering && !TextLayoutEngine.sUseTextShadersInWorld)) {
-            return;
-        }
-
-        a = outlineColor >>> 24;
-        r = outlineColor >> 16 & 0xff;
-        g = outlineColor >> 8 & 0xff;
-        b = outlineColor & 0xff;
-
-        var newMatrix = new Matrix4f(matrix);
-        newMatrix.translate(OUTLINE_OFFSET);
-        layout.drawTextOutline(newMatrix, source, x, y, r, g, b, a, packedLight);
-    }
 
     /*public static void change(boolean global, boolean shadow) {
         RenderCore.checkRenderThread();
