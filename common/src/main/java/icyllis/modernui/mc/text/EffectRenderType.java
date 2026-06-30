@@ -18,79 +18,101 @@
 
 package icyllis.modernui.mc.text;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.GpuSampler;
+import com.mojang.blaze3d.textures.GpuTextureView;
+import icyllis.arc3d.core.ColorInfo;
+import icyllis.arc3d.engine.Engine;
+import icyllis.arc3d.engine.ISurface;
+import icyllis.arc3d.engine.ImageDesc;
+import icyllis.arc3d.engine.ImmediateContext;
+import icyllis.arc3d.opengl.GLDevice;
+import icyllis.arc3d.opengl.GLTexture;
+import icyllis.modernui.annotation.RenderThread;
+import icyllis.modernui.core.Core;
+import icyllis.modernui.mc.ModernUIMod;
+import icyllis.modernui.mc.MuiModApi;
+import icyllis.modernui.mc.b3d.GlTexture_Wrapped;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.resources.Identifier;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
+
+import javax.annotation.Nonnull;
+import java.nio.ByteBuffer;
+import java.util.Objects;
+
 /**
+ * Renders text decorations (underline, strikethrough) using a small solid-white
+ * texture. On 1.21.11 effects are submitted as {@link TextEffectRenderState}s,
+ * which need a {@link GpuTextureView} + {@link GpuSampler} (see
+ * {@link net.minecraft.client.gui.render.TextureSetup}) and a {@link RenderType}
+ * keyed by an {@link Identifier}; this class owns the white texture and its
+ * registration.
+ *
  * @since 2.0.1
  */
-// no longer used since Minecraft 26.1
-@Deprecated
-public abstract class EffectRenderType {
+public final class EffectRenderType {
 
-    /*private static GLTexture WHITE;
+    /**
+     * Identifier under which the white effect texture is registered with the
+     * vanilla TextureManager, so it can key a {@link TextRenderType}.
+     */
+    public static final Identifier WHITE_SHEET = ModernUIMod.location("textures/effect/white.png");
+
+    private static GLTexture WHITE;
     private static GlTexture_Wrapped WHITE_WRAPPER = null;
     private static GpuTextureView WHITE_WRAPPER_VIEW = null;
+    private static GlyphManager.AtlasTextureWrapper WHITE_ABSTRACT = null;
 
-    private static RenderType TYPE;
-    private static RenderType SEE_THROUGH_TYPE;
-    private static RenderType POLYGON_OFFSET_TYPE;*/
+    private EffectRenderType() {
+    }
 
-    /*static {
-        TYPE = new EffectRenderType("modern_text_effect", 256, () -> {
-            TextRenderType.VANILLA_STATES.forEach(RenderStateShard::setupRenderState);
-            //RenderSystem.setShaderTexture(0, WHITE.getHandle());
-        }, () -> TextRenderType.VANILLA_STATES.forEach(RenderStateShard::clearRenderState));
-        SEE_THROUGH_TYPE = new EffectRenderType("modern_text_effect_see_through", 256, () -> {
-            TextRenderType.SEE_THROUGH_STATES.forEach(RenderStateShard::setupRenderState);
-            //RenderSystem.setShaderTexture(0, WHITE.getHandle());
-        }, () -> TextRenderType.SEE_THROUGH_STATES.forEach(RenderStateShard::clearRenderState));
-        POLYGON_OFFSET_TYPE = new EffectRenderType("modern_text_effect_polygon_offset", 256, () -> {
-            TextRenderType.POLYGON_OFFSET_STATES.forEach(RenderStateShard::setupRenderState);
-            //RenderSystem.setShaderTexture(0, WHITE.getHandle());
-        }, () -> TextRenderType.POLYGON_OFFSET_STATES.forEach(RenderStateShard::clearRenderState));
-    }*/
-
-    /*private EffectRenderType(String name, int bufferSize, Runnable setupState, Runnable clearState) {
-        super(name, *//*DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, VertexFormat.Mode.QUADS,*//*
-                bufferSize, false, true, setupState, clearState);
-    }*/
-
-    /*@RenderThread
+    @RenderThread
     @Nonnull
     public static RenderType getRenderType(boolean seeThrough, boolean polygonOffset) {
-        if (WHITE == null)
+        if (WHITE == null) {
             makeWhiteTexture();
-        return polygonOffset ? POLYGON_OFFSET_TYPE : seeThrough ? SEE_THROUGH_TYPE : TYPE;
-    }*/
+        }
+        Font.DisplayMode mode = polygonOffset
+                ? Font.DisplayMode.POLYGON_OFFSET
+                : seeThrough ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL;
+        // effects share the vanilla (intensity) text pipeline, like bitmap glyphs
+        return TextRenderType.getOrCreate(WHITE_SHEET, mode, /*isBitmapFont*/ true);
+    }
 
-    /*@RenderThread
-    @Nonnull
-    public static EffectRenderType getRenderType(Font.DisplayMode mode) {
-        return switch (mode) {
-            case SEE_THROUGH -> SEE_THROUGH_TYPE;
-            case POLYGON_OFFSET -> POLYGON_OFFSET_TYPE;
-            default -> TYPE;
-        };
-    }*/
-
-    /*@RenderThread
+    @RenderThread
     @Nonnull
     public static GpuTextureView getTexture() {
-        if (WHITE == null)
+        if (WHITE == null) {
             makeWhiteTexture();
+        }
         return WHITE_WRAPPER_VIEW;
-    }*/
+    }
+
+    @RenderThread
+    @Nonnull
+    public static GpuSampler getSampler() {
+        return RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST);
+    }
 
     public static void clear() {
-        /*if (WHITE != null) {
+        if (WHITE != null) {
+            Minecraft.getInstance().getTextureManager().release(WHITE_SHEET);
             WHITE_WRAPPER_VIEW.close();
             WHITE_WRAPPER.close();
             WHITE = null;
             WHITE_WRAPPER = null;
             WHITE_WRAPPER_VIEW = null;
-        }*/
+            WHITE_ABSTRACT = null;
+        }
     }
 
     private static void makeWhiteTexture() {
-        /*ImmediateContext context = Core.requireImmediateContext();
+        ImmediateContext context = Core.requireImmediateContext();
         final int width = 8, height = 8;
         final int colorType = ColorInfo.CT_RGBA_8888;
         ImageDesc desc = context.getCaps().getDefaultColorImageDesc(
@@ -105,7 +127,7 @@ public abstract class EffectRenderType {
                 .getResourceProvider()
                 .findOrCreateImage(
                         desc,
-                        *//*budgeted*//* false,
+                        /*budgeted*/ false,
                         "WhiteTexture"
                 );
         Objects.requireNonNull(WHITE);
@@ -120,35 +142,14 @@ public abstract class EffectRenderType {
                     MemoryUtil.memAddress(pixels)
             );
             assert res;
+        }
 
-            *//*int boundTexture = GL33C.glGetInteger(GL33C.GL_TEXTURE_BINDING_2D);
-            GL33C.glBindTexture(GL33C.GL_TEXTURE_2D, WHITE.getHandle());
+        WHITE_WRAPPER = new GlTexture_Wrapped(WHITE); // transfer ownership
+        WHITE_WRAPPER_VIEW = MuiModApi.get().getRealGpuDevice().createTextureView(WHITE_WRAPPER);
 
-            GL33C.glTexParameteri(GL33C.GL_TEXTURE_2D, GL33C.GL_TEXTURE_MAG_FILTER, GL33C.GL_NEAREST);
-            GL33C.glTexParameteri(GL33C.GL_TEXTURE_2D, GL33C.GL_TEXTURE_MIN_FILTER, GL33C.GL_NEAREST);
+        // NEAREST filtering is selected per-bind via GpuSampler (see getSampler()).
 
-            GL33C.glBindTexture(GL33C.GL_TEXTURE_2D, boundTexture);*//*
-        }*/
-
-        /*WHITE_WRAPPER = new GlTexture_Wrapped(WHITE); // transfer ownership
-        WHITE_WRAPPER_VIEW = MuiModApi.get().getRealGpuDevice().createTextureView(WHITE_WRAPPER);*/
-
-        //WHITE_WRAPPER.setTextureFilter(FilterMode.NEAREST, false);
-
-        /*TYPE = MuiModApi.get().createRenderType("modern_text_effect", 256,
-                false, true, RenderPipelines.TEXT,
-                new TextRenderType.ExtendedTextureStateShard(WHITE_WRAPPER_VIEW),
-                true);
-        SEE_THROUGH_TYPE = MuiModApi.get().createRenderType("modern_text_effect_see_through", 256,
-                false, true, RenderPipelines.TEXT_SEE_THROUGH,
-                new TextRenderType.ExtendedTextureStateShard(WHITE_WRAPPER_VIEW),
-                true);
-        POLYGON_OFFSET_TYPE = MuiModApi.get().createRenderType("modern_text_effect_polygon_offset", 256,
-                false, true, RenderPipelines.TEXT_POLYGON_OFFSET,
-                new TextRenderType.ExtendedTextureStateShard(WHITE_WRAPPER_VIEW),
-                true);*/
-        /*TYPE = null;
-        SEE_THROUGH_TYPE = null;
-        POLYGON_OFFSET_TYPE = null;*/
+        WHITE_ABSTRACT = new GlyphManager.AtlasTextureWrapper(WHITE_WRAPPER_VIEW);
+        Minecraft.getInstance().getTextureManager().register(WHITE_SHEET, WHITE_ABSTRACT);
     }
 }

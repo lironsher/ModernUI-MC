@@ -19,6 +19,9 @@
 package icyllis.modernui.mc.text;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import icyllis.arc3d.core.Rect2f;
 import icyllis.modernui.mc.GradientRectangleRenderState;
@@ -186,7 +189,7 @@ public class ModernPreparedText implements Font.PreparedText {
                 if (!textRuns.isEmpty()) {
                     textRuns.getLast().glyphEnd = i;
                 }
-                textRuns.add(new TextRun(pipeline, texture, i, isColorEmoji,
+                textRuns.add(new TextRun(pipeline, texture, samplerForMode(mode), i, isColorEmoji,
                         preferredMode == TextRenderType.MODE_NORMAL));
             }
             float upSkew = 0;
@@ -268,7 +271,7 @@ public class ModernPreparedText implements Font.PreparedText {
             var run = runs.get(i);
             renderState.submitGlyphToCurrentLayer(
                     new TextRunRenderState(pose, run.pipeline,
-                            TextureSetup.singleTextureWithLightmap(run.textureView),
+                            TextureSetup.singleTextureWithLightmap(run.textureView, run.sampler),
                             scissor,
                             x, top, color, dropShadow,
                             glyphs, positions, flags,
@@ -289,21 +292,37 @@ public class ModernPreparedText implements Font.PreparedText {
     }
 
     /**
+     * Selects the {@link GpuSampler} matching how {@link TextRenderType} samples
+     * each text mode: SDF text uses LINEAR/repeat, everything else NEAREST/clamp.
+     */
+    @Nonnull
+    private static GpuSampler samplerForMode(int mode) {
+        return switch (mode) {
+            case TextRenderType.MODE_SDF_FILL, TextRenderType.MODE_SDF_STROKE ->
+                    RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR);
+            default ->
+                    RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST);
+        };
+    }
+
+    /**
      * GPU-baked text sub run.
      */
     static class TextRun {
 
         public final RenderPipeline pipeline;
         public final GpuTextureView textureView;
+        public final GpuSampler sampler;
         public final int glyphStart;
         public int glyphEnd;
         public final boolean isColorEmoji;
         public final boolean isDirectMask;
 
-        public TextRun(RenderPipeline pipeline, GpuTextureView textureView, int glyphStart,
-                       boolean isColorEmoji, boolean isDirectMask) {
+        public TextRun(RenderPipeline pipeline, GpuTextureView textureView, GpuSampler sampler,
+                       int glyphStart, boolean isColorEmoji, boolean isDirectMask) {
             this.pipeline = pipeline;
             this.textureView = textureView;
+            this.sampler = sampler;
             this.glyphStart = glyphStart;
             this.isColorEmoji = isColorEmoji;
             this.isDirectMask = isDirectMask;

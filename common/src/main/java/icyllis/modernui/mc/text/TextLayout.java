@@ -18,12 +18,12 @@
 
 package icyllis.modernui.mc.text;
 
-import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import icyllis.modernui.graphics.MathUtil;
 import icyllis.modernui.graphics.text.Font;
 import icyllis.modernui.util.SparseArray;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.resources.Identifier;
 import org.joml.Matrix4f;
 
 import javax.annotation.Nonnull;
@@ -368,12 +368,12 @@ public class TextLayout {
 
         final float baseline = top + sBaselineOffset;
 
-        GpuTextureView prevTexture = null;
+        Identifier prevTexture = null;
         int prevMode = -1;
         net.minecraft.client.gui.Font.DisplayMode prevVanillaDisplayMode = null;
         VertexConsumer builder = null;
 
-        GpuTextureView fontTexture = null;
+        Identifier fontTexture = null;
 
         final boolean seeThrough = preferredMode == TextRenderType.MODE_SEE_THROUGH;
         if ((bgColor & 0xFF000000) != 0) {
@@ -401,7 +401,7 @@ public class TextLayout {
             final float w;
             final float h;
             final int mode;
-            final GpuTextureView texture;
+            final Identifier texture;
             boolean fakeItalic = false;
             int ascent = 0;
             net.minecraft.client.gui.Font.DisplayMode vanillaDisplayMode = null;
@@ -418,7 +418,7 @@ public class TextLayout {
             if ((bits & CharacterStyle.ANY_BITMAP_REPLACEMENT) != 0) {
                 final float scaleFactor;
                 if (getFont(i) instanceof BitmapFont bitmapFont) {
-                    texture = GlyphManager.getInstance().getCurrentTexture(bitmapFont);
+                    texture = GlyphManager.getInstance().getCurrentTextureName(bitmapFont);
                     ascent = bitmapFont.getAscent();
                     scaleFactor = 1f / TextLayoutEngine.BITMAP_SCALE;
                     isBitmapFont = true;
@@ -426,7 +426,7 @@ public class TextLayout {
                     if (isShadow) {
                         continue;
                     }
-                    texture = GlyphManager.getInstance().getEmojiTexture();
+                    texture = GlyphManager.getInstance().getEmojiTextureName();
                     ascent = TextLayout.STANDARD_BASELINE_OFFSET;
                     scaleFactor = TextLayoutProcessor.sBaseFontSize / GlyphManager.EMOJI_BASE;
                     isColorEmoji = true;
@@ -459,7 +459,7 @@ public class TextLayout {
                 w = glyph.width * invDensity;
                 h = glyph.height * invDensity;
                 if (fontTexture == null) {
-                    fontTexture = GlyphManager.getInstance().getFontTexture();
+                    fontTexture = GlyphManager.getInstance().getFontTextureName();
                 }
                 texture = fontTexture;
             }
@@ -587,10 +587,10 @@ public class TextLayout {
 
         final float baseline = top + sBaselineOffset;
 
-        GpuTextureView prevTexture = null;
+        Identifier prevTexture = null;
         VertexConsumer builder = null;
 
-        GpuTextureView fontTexture = null;
+        Identifier fontTexture = null;
 
         // outset glyph bounds
         final float sBloat = 1.0f / resLevel;
@@ -604,7 +604,7 @@ public class TextLayout {
             final float ry;
             final float w;
             final float h;
-            final GpuTextureView texture;
+            final Identifier texture;
             if ((bits & CharacterStyle.ANY_BITMAP_REPLACEMENT) != 0) {
                 continue;
             } else {
@@ -619,7 +619,7 @@ public class TextLayout {
                 w = glyph.width / resLevel;
                 h = glyph.height / resLevel;
                 if (fontTexture == null) {
-                    fontTexture = GlyphManager.getInstance().getFontTexture();
+                    fontTexture = GlyphManager.getInstance().getFontTextureName();
                 }
                 texture = fontTexture;
             }
