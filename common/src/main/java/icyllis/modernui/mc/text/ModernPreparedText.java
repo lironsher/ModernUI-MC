@@ -28,6 +28,7 @@ import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.gui.render.state.GuiRenderState;
 import net.minecraft.client.renderer.RenderPipelines;
 import org.joml.Matrix3x2f;
+import org.joml.Matrix3x2fc;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -246,7 +247,7 @@ public class ModernPreparedText implements Font.PreparedText {
     }
 
     @SuppressWarnings("ForLoopReplaceableByForEach")
-    public void submitRuns(GuiRenderState renderState, Matrix3x2f pose,
+    public void submitRuns(GuiRenderState renderState, Matrix3x2fc pose,
                            @Nullable ScreenRectangle scissor) {
         if ((bgColor & 0xFF000000) != 0) {
             // this is only used by CartographyTableScreen, emit as normal fills
