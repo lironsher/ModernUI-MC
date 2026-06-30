@@ -88,6 +88,9 @@ dependencies {
 
     compileOnly("org.lwjgl:lwjgl-vulkan:3.4.1")
     testCompileOnly("org.lwjgl:lwjgl-vulkan:3.4.1")
+    // common sources are added to all JavaCompile tasks (incl. compileTestJava), so the
+    // optional VulkanMod integration must be on the test compile classpath too.
+    testCompileOnly "maven.modrinth:JYQhtZtO:PNODQNIn"
 
     //implementation("com.vladsch.flexmark:flexmark:${flexmark_version}")
 
