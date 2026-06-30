@@ -1,7 +1,15 @@
 import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
-    id 'dev.architectury.loom' version '1.11-SNAPSHOT'
+    // Switched from architectury-loom to plain fabric-loom for MC 1.21.11.
+    // architectury-loom (max published 1.11.454) cannot process 1.21.11's newer
+    // fabric-api (0.141.x) — it fails at config with
+    // "Javadoc provided by mod (fabric-content-registries-v0) must be have an
+    // intermediary source namespace". fabric-loom 1.17.x handles 1.21.11 fine
+    // (proven by the standalone PoC). We only use a minimal loom surface here
+    // (officialMojangMappings, accessWidenerPath, RemapJarTask), all provided by
+    // plain fabric-loom.
+    id 'fabric-loom' version '1.17.12'
     //id 'com.matthewprenger.cursegradle' version '1.4.0'
     id 'com.gradleup.shadow' version '9.3.0'
 }
@@ -13,10 +21,13 @@ configurations {
 }
 
 loom {
-    silentMojangMappingsLicense()
+    // silentMojangMappingsLicense() was architectury-loom-specific. Plain
+    // fabric-loom accepts the Mojang mappings license implicitly when
+    // officialMojangMappings() is used, so the call is dropped.
     accessWidenerPath = file("src/main/resources/modernui.accesswidener")
     runConfigs.each { it.setIdeConfigGenerated(true) } // Uncomment this if run configs not generated
-    addTaskBeforeRun(":${name}:classes")
+    // addTaskBeforeRun was architectury-loom-specific and only affects dev run
+    // configs (not `build`); plain fabric-loom has no equivalent, so it's omitted.
 }
 
 repositories {
@@ -52,10 +63,10 @@ dependencies {
     mappings loom.officialMojangMappings()
 
     modImplementation "net.fabricmc:fabric-loader:0.17.2"
-    modApi "net.fabricmc.fabric-api:fabric-api:0.133.0+1.21.8"
+    modApi "net.fabricmc.fabric-api:fabric-api:0.141.4+1.21.11"
 
     modImplementation "com.terraformersmc:modmenu:15.0.0"
-    modApi "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:21.8.1"
+    modApi "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:21.11.1"
 
     implementation project(':common')
 

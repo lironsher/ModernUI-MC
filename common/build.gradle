@@ -3,6 +3,25 @@ plugins {
 }
 
 repositories {
+    // Route the entire org.lwjgl group exclusively to Mojang's library repo.
+    // Minecraft 1.21.11 pulls LWJGL natives whose classifier variants
+    // (notably org.lwjgl:lwjgl-freetype:3.3.3:natives-macos-patch) are published
+    // ONLY at libraries.minecraft.net, not Maven Central. If Gradle resolves the
+    // lwjgl module POM from Central first, it then 404s on the macos-patch
+    // classifier and never falls back to Mojang. Making Mojang exclusive for
+    // org.lwjgl guarantees the POM and every classifier come from the one repo
+    // that has them all.
+    exclusiveContent {
+        forRepository {
+            maven {
+                name 'Mojang'
+                url 'https://libraries.minecraft.net/'
+            }
+        }
+        filter {
+            includeGroup 'org.lwjgl'
+        }
+    }
     maven {
         url 'https://repo.spongepowered.org/repository/maven-public/'
     }

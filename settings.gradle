@@ -30,9 +30,14 @@ rootProject.name = 'ModernUI-MC'
 
 include 'common'
 
-include 'forge'
-project(':forge').name = "ModernUI-Forge"
-include 'neoforge'
-project(':neoforge').name = "ModernUI-NeoForge"
+// Forge and NeoForge are excluded on the MC 1.21.11 branch: this branch targets
+// Fabric only (for Poofy), and neither Forge nor NeoForge has published a
+// 1.21.11 toolchain (e.g. net.minecraftforge:forge:1.21.11-* does not exist),
+// so configuring those subprojects fails the whole build. Re-enable them if/when
+// a 1.21.11 Forge/NeoForge toolchain ships.
+//include 'forge'
+//project(':forge').name = "ModernUI-Forge"
+//include 'neoforge'
+//project(':neoforge').name = "ModernUI-NeoForge"
 include 'fabric'
 project(':fabric').name = "ModernUI-Fabric"
