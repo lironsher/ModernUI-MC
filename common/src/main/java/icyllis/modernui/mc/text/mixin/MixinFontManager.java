@@ -37,14 +37,14 @@ public class MixinFontManager {
      * @reason Modern Text Engine
      */
     @Overwrite
-    public CompletableFuture<Void> reload(@Nonnull PreparableReloadListener.PreparationBarrier preparationBarrier,
-                                          @Nonnull ResourceManager resourceManager,
+    public CompletableFuture<Void> reload(@Nonnull PreparableReloadListener.SharedState sharedState,
                                           @Nonnull Executor preparationExecutor,
+                                          @Nonnull PreparableReloadListener.PreparationBarrier preparationBarrier,
                                           @Nonnull Executor reloadExecutor) {
         return TextLayoutEngine.getInstance().injectFontManager((FontManager) (Object) this)
-                .reload(preparationBarrier,
-                        resourceManager,
+                .reload(sharedState,
                         preparationExecutor,
+                        preparationBarrier,
                         reloadExecutor);
     }
 }
