@@ -45,7 +45,7 @@ public class MixinLevelRendererDBG {
                                Camera camera, GameRenderer gameRenderer, LightTexture lightTexture,
                                Matrix4f modelView, Matrix4f projection, CallbackInfo ci) {
         if (Screen.hasAltDown() &&
-                InputConstants.isKeyDown(Minecraft.getInstance().getWindow().handle(), GLFW.GLFW_KEY_KP_7)) {
+                InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), GLFW.GLFW_KEY_KP_7)) {
             LOGGER.info("Capture from MixinLevelRendererDBG.afterEntities()");
             LOGGER.info("Param ModelViewMatrix: {}", modelView);
             LOGGER.info("Param Camera.getPosition(): {}, pitch: {}, yaw: {}, rot: {}, detached: {}",

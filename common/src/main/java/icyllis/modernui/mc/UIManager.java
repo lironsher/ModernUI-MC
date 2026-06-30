@@ -760,7 +760,7 @@ public abstract class UIManager implements LifecycleOwner {
         if (minecraft.gameRenderer.currentPostEffect() == null) {
             LOGGER.info(MARKER, "Load post-processing effect");
             final Identifier effect;
-            if (InputConstants.isKeyDown(mWindow.handle(), GLFW_KEY_RIGHT_SHIFT)) {
+            if (InputConstants.isKeyDown(mWindow, GLFW_KEY_RIGHT_SHIFT)) {
                 effect = ModernUIMod.location("grayscale");
             } else {
                 effect = ModernUIMod.location("radial_blur");
