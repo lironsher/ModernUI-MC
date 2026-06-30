@@ -82,8 +82,10 @@ public abstract class TextRenderType {
 
     public static final RenderPipeline PIPELINE_GUI_NORMAL = RenderPipeline.builder(PIPELINE_SNIPPET)
             .withLocation(ModernUIMod.location("pipeline/modern_text_gui_normal"))
-            // 26.2 core/text.vsh drops the fog varyings under IS_GUI; our fsh guards them the same way
+            // 26.2: IS_GUI makes the vanilla core/text VS drop fog outputs, but the define does NOT
+            // reach our (snippet-shared, cached) FS — so use a dedicated fog-free GUI fragment shader.
             .withShaderDefine("IS_GUI")
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_gui_normal"))
             .withDepthStencilState(Optional.empty())
             .build();
 
@@ -111,7 +113,8 @@ public abstract class TextRenderType {
 
     public static final RenderPipeline PIPELINE_GUI_SDF = RenderPipeline.builder(PIPELINE_SDF_SNIPPET)
             .withLocation(ModernUIMod.location("pipeline/modern_text_gui_sdf"))
-            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
+            // dedicated fog-free GUI FS (same 26.2 IS_GUI-doesn't-reach-FS reason as gui_normal)
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_gui_sdf_fill"))
             .withShaderDefine("IS_GUI")
             .withDepthStencilState(Optional.empty())
             .build();
