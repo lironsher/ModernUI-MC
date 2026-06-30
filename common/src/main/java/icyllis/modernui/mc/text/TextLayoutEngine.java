@@ -1220,6 +1220,24 @@ public class TextLayoutEngine extends FontResourceManager
      * @param fontName a font name
      * @return the font collection
      */
+    /**
+     * Resolves a vanilla {@link Style#getFont() font description} to a stable
+     * {@link Identifier} usable as a layout-cache key and as a
+     * {@link #getFontCollection(Identifier)} lookup key.
+     * <p>
+     * 1.21.11 changed {@code Style#getFont()} to return a {@link FontDescription}
+     * (an interface) rather than an {@code Identifier}. We support the common
+     * {@link FontDescription.Resource} case; sprite-based descriptions fall back
+     * to the default font (full replacement-run rendering is unsupported).
+     */
+    @Nonnull
+    public static Identifier resolveFontName(@Nonnull FontDescription font) {
+        if (font instanceof FontDescription.Resource resource) {
+            return resource.id();
+        }
+        return Minecraft.DEFAULT_FONT;
+    }
+
     @Nonnull
     public FontCollection getFontCollection(@Nonnull Identifier fontName) {
         if (mForceUnicodeFont == Boolean.TRUE &&

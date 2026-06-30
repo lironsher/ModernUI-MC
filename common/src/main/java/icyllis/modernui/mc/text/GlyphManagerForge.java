@@ -1169,7 +1169,9 @@ public class GlyphManagerForge {
 
         public void drawGlyph(Matrix4f matrix, @Nonnull MultiBufferSource buffer, float x, float y, int r, int g,
                               int b, int a, boolean seeThrough, int packedLight) {
-            VertexConsumer builder = buffer.getBuffer(seeThrough ? seeThroughType : renderType);
+            // legacy Forge-era path; rendering body is disabled (see commented-out
+            // vertex emission below). 1.21.11's TextRenderType is no longer a
+            // vanilla RenderType, so we no longer fetch a VertexConsumer here.
             x += baselineX;
             y += baselineY;
             /*builder.vertex(matrix, x, y, 0).color(r, g, b, a).uv(u1, v1).uv2(packedLight).endVertex();

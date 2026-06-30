@@ -230,7 +230,7 @@ public class TextLayoutProcessor {
         int charCount = mBuilder.addCodePoint(codePoint);
         while (charCount-- > 0) {
             mStyles.add(styleFlags);
-            mFontNames.add(style.getFont());
+            mFontNames.add(TextLayoutEngine.resolveFontName(style.getFont()));
         }
         return true;
     };
