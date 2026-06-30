@@ -18,12 +18,14 @@
 
 package icyllis.modernui.mc;
 
+import com.mojang.blaze3d.PrimitiveTopology;
+import com.mojang.blaze3d.pipeline.BindGroupLayout;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.renderer.BindGroupLayouts;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
@@ -32,15 +34,22 @@ import org.jetbrains.annotations.ApiStatus;
 @ApiStatus.Internal
 public abstract class GuiRenderType {
 
+    // 26.2 declares pipeline uniforms/samplers as bind group layouts instead of flat withUniform calls.
+    // DynamicTransforms + Projection live in the shared BindGroupLayouts.MATRICES_PROJECTION; the custom
+    // ModernTooltip uniform gets its own bind group layout.
+    private static final BindGroupLayout MODERN_TOOLTIP_LAYOUT = BindGroupLayout.builder()
+            .withUniform("ModernTooltip", UniformType.UNIFORM_BUFFER)
+            .build();
+
     public static final RenderPipeline PIPELINE_TOOLTIP = RenderPipeline.builder()
             .withLocation(ModernUIMod.location("pipeline/modern_tooltip"))
             .withVertexShader(ModernUIMod.location("core/rendertype_modern_tooltip"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_tooltip"))
-            .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
-            .withUniform("Projection", UniformType.UNIFORM_BUFFER)
-            .withUniform("ModernTooltip", UniformType.UNIFORM_BUFFER)
+            .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+            .withBindGroupLayout(MODERN_TOOLTIP_LAYOUT)
             .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
-            .withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
+            .withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
+            .withPrimitiveTopology(PrimitiveTopology.QUADS)
             .build();
 
     /*public static final ShaderProgram SHADER_TOOLTIP = new ShaderProgram(
