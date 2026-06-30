@@ -4,20 +4,20 @@ Branch: `feat/mc-26.2` (fork: `lironsher/ModernUI-MC`). Target: produce a workin
 **Fabric** ModernUI jar for MC **26.2** so the Poofy mod can use the in-game UI on its
 `26.2.x` Stonecutter variant.
 
-## TL;DR status (updated — 142 → 22 errors)
-- ✅ Build infra retargeted to 26.2, all deps resolve, Fabric-only (Forge/NeoForge dropped).
-- ✅ Mechanical renames, screen/overlay/chat relocation (Gui/Hud), textures (`GpuFormat`),
-  and shader/uniform pipeline (`RenderPipeline.Builder` bind-groups) — all landed & pushed, compile clean.
-- ⛔ **22 unique errors remain, all in ONE coherent area: the legacy in-world (immediate-mode) text path.**
-  26.2 deleted `MultiBufferSource`, `Font.drawInBatch`, and `Minecraft.renderBuffers()`. The **GUI** text
-  path already runs on 26.x render-state (`ModernPreparedText`/`MixinGuiTextRenderState`); only the
-  **in-world** path is unported. Files: `ModernTextRenderer`, `TextLayout`, `GlyphManagerForge`,
-  `text/mixin/MixinFontRenderer`, `text/mixin/AccessBufferSource`.
-- ⚠️ **Needs the dev client** to finish: in-world text now goes through
-  `OrderedSubmitNodeCollector.submitText(...)`; reimplement ModernUI's in-world rendering onto it
-  (mirror the done GUI path) and delete the obsolete `MixinFontRenderer`/`AccessBufferSource`. Also
-  verify Step-4 shader **bind-group order / GLSL `layout(set=)` indices** at runtime (mirrored from vanilla,
-  unverified), and re-point `MixinMinecraft`'s stale screen shadow/inject to `Gui.setScreen` (see Step 1).
+## TL;DR status — ✅ BUILDS CLEAN (142 → 0 compile errors)
+`./gradlew :ModernUI-Fabric:build` → **BUILD SUCCESSFUL**, produces `fabric/build/libs/ModernUI-Fabric-26.2-3.13.0.5-universal.jar` (shadowed, shippable) + the slim `...-3.13.0.5.jar`.
+- ✅ Build infra, deps, mechanical renames, screen/overlay/chat (Gui/Hud), textures (`GpuFormat`),
+  shader/uniform pipeline (`RenderPipeline.Builder` bind-groups) — all done & pushed.
+- ✅ The dead 26.1.2 **in-world immediate-mode** text subsystem (`MultiBufferSource`/`Font.drawInBatch`/
+  `renderBuffers`, deleted in 26.2) was **excised**. GUI text = ModernUI; in-world text = **vanilla fallback**.
+- ⚠️ **NOT yet runtime-tested.** Compiles ≠ renders. Before relying on it, `runClient` and verify: the GUI
+  panel opens and ModernUI text/Hebrew RTL renders (Step-4 shader **bind-group order / GLSL `layout(set=)`**
+  is mirrored-from-vanilla but unverified — likely first thing to break), and re-point `MixinMinecraft`'s
+  stale `screen` shadow + `setScreen` inject to **`Gui.setScreen`** (runtime mixin, currently no-ops screen-change).
+- ◻️ OPTIONAL follow-up — restore ModernUI's **in-world** text enhancement: implement `ModernPreparedText.visit()`
+  to emit MC `TextRenderable`s (`render(Matrix4fc, VertexConsumer, light, …)`) and intercept the in-world
+  `Font.prepareText` calls in `Display.TextDisplay.TextRenderState` / the `submitText` path (mirror
+  `MixinGuiTextRenderState`). Not needed for GUI panels.
 
 ## Environment / how to build
 ```bash
