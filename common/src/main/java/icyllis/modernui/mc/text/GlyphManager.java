@@ -35,6 +35,8 @@ import icyllis.modernui.mc.ModernUIMod;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.lwjgl.BufferUtils;
@@ -75,6 +77,45 @@ import static icyllis.modernui.mc.ModernUIMod.LOGGER;
 public class GlyphManager {
 
     public static final Marker MARKER = MarkerManager.getMarker("Glyph");
+
+    /**
+     * Stable {@link Identifier}s under which our font atlas {@link GpuTextureView}s
+     * are registered with the vanilla {@link net.minecraft.client.renderer.texture.TextureManager},
+     * so that 1.21.11's {@code RenderSetup}/{@code TextRenderType} (which only accept an
+     * {@link Identifier}) can resolve our arc3d-backed GPU textures.
+     */
+    public static final Identifier FONT_SHEET = ModernUIMod.location("textures/atlas/font.png");
+    public static final Identifier EMOJI_SHEET = ModernUIMod.location("textures/atlas/emoji.png");
+    public static final Identifier BITMAP_SHEET = ModernUIMod.location("textures/atlas/bitmap.png");
+
+    /**
+     * A thin {@link AbstractTexture} that simply exposes a {@link GpuTextureView}
+     * owned by one of our arc3d {@link GLFontAtlas}es. The view may change when the
+     * atlas resizes; callers update {@link #view} before each use via
+     * {@link #refreshTexture(Identifier, GpuTextureView)}.
+     */
+    static final class AtlasTextureWrapper extends AbstractTexture {
+        AtlasTextureWrapper(GpuTextureView view) {
+            this.textureView = view;
+            if (view != null) {
+                this.texture = view.texture();
+            }
+        }
+
+        void update(GpuTextureView view) {
+            this.textureView = view;
+            this.texture = view != null ? view.texture() : null;
+        }
+
+        @Override
+        public void close() {
+            // The underlying GpuTextureView is owned by GLFontAtlas, not us.
+            this.textureView = null;
+            this.texture = null;
+        }
+    }
+
+    private final HashMap<Identifier, AtlasTextureWrapper> mRegisteredTextures = new HashMap<>();
 
     /**
      * The width in pixels of a transparent border between individual glyphs in the atlas.
@@ -417,6 +458,64 @@ public class GlyphManager {
             return font.getCurrentTexture();
         }
         return null;
+    }
+
+    /**
+     * (Re)registers {@code view} under {@code name} with the vanilla TextureManager
+     * (or refreshes an already-registered wrapper, since the atlas view may change on
+     * resize), returning {@code name} so the caller can key a {@code TextRenderType} by it.
+     */
+    @RenderThread
+    private Identifier refreshTexture(@Nonnull Identifier name, @Nullable GpuTextureView view) {
+        AtlasTextureWrapper wrapper = mRegisteredTextures.get(name);
+        if (wrapper == null) {
+            wrapper = new AtlasTextureWrapper(view);
+            mRegisteredTextures.put(name, wrapper);
+            Minecraft.getInstance().getTextureManager().register(name, wrapper);
+        } else {
+            wrapper.update(view);
+        }
+        return name;
+    }
+
+    /**
+     * Returns the {@link Identifier} for the main (A8) font atlas, registering/refreshing
+     * its GPU texture with the vanilla TextureManager. May return {@code null} if the atlas
+     * has no backing texture yet.
+     */
+    @RenderThread
+    @Nullable
+    public Identifier getFontTextureName() {
+        GpuTextureView view = getFontTexture();
+        if (view == null) {
+            return null;
+        }
+        return refreshTexture(FONT_SHEET, view);
+    }
+
+    @RenderThread
+    @Nullable
+    public Identifier getEmojiTextureName() {
+        GpuTextureView view = getEmojiTexture();
+        if (view == null) {
+            return null;
+        }
+        return refreshTexture(EMOJI_SHEET, view);
+    }
+
+    /**
+     * Returns the {@link Identifier} for a bitmap font's current texture (the shared
+     * bitmap atlas, or the font's dedicated texture), registering/refreshing it.
+     */
+    @RenderThread
+    @Nullable
+    public Identifier getCurrentTextureName(@Nonnull BitmapFont font) {
+        GpuTextureView view = getCurrentTexture(font);
+        if (view == null) {
+            return null;
+        }
+        Identifier name = font.fitsInAtlas() ? BITMAP_SHEET : font.getName();
+        return refreshTexture(name, view);
     }
 
     /**

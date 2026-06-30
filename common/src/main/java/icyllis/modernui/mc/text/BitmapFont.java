@@ -20,7 +20,6 @@ package icyllis.modernui.mc.text;
 
 import com.google.gson.JsonParseException;
 import com.mojang.blaze3d.font.GlyphInfo;
-import com.mojang.blaze3d.font.SheetGlyphInfo;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import icyllis.arc3d.core.PixelUtils;
@@ -263,7 +262,8 @@ public class BitmapFont implements Font, AutoCloseable {
         mTextureWrapper = new GlTexture_Wrapped(mTexture); // transfer ownership
         mTextureWrapperView = MuiModApi.get().getRealGpuDevice().createTextureView(mTextureWrapper);
 
-        mTextureWrapper.setTextureFilter(FilterMode.NEAREST, false);
+        // NEAREST filtering is selected per-bind via GpuSampler in the render setup
+        // (1.21.11 removed GpuTexture#setTextureFilter).
     }
 
     public void dumpAtlas(int index, String path) {
@@ -388,6 +388,14 @@ public class BitmapFont implements Font, AutoCloseable {
     // Render thread only
     public GpuTextureView getCurrentTexture() {
         return mTexture != null ? mTextureWrapperView : null;
+    }
+
+    /**
+     * The stable {@link Identifier} under which this font's dedicated texture is
+     * (re)registered with the vanilla TextureManager by {@link GlyphManager}.
+     */
+    public Identifier getName() {
+        return mName;
     }
 
     // positive
@@ -556,11 +564,7 @@ public class BitmapFont implements Font, AutoCloseable {
             return advance;
         }
 
-        @Nonnull
-        @Override
-        public net.minecraft.client.gui.font.glyphs.BakedGlyph bake(
-                @Nonnull Function<SheetGlyphInfo, net.minecraft.client.gui.font.glyphs.BakedGlyph> function) {
-            return EmptyGlyph.INSTANCE;
-        }
+        // 1.21.11: GlyphInfo no longer declares bake(...); MUI bakes glyphs itself
+        // via GlyphManager into its own arc3d atlas.
     }
 }
