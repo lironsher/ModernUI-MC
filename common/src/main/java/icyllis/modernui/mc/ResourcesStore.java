@@ -57,10 +57,11 @@ public class ResourcesStore implements PreparableReloadListener {
      */
     @Nonnull
     @Override
-    public CompletableFuture<Void> reload(@Nonnull PreparationBarrier preparationBarrier,
-                                          @Nonnull ResourceManager resourceManager,
+    public CompletableFuture<Void> reload(@Nonnull SharedState sharedState,
                                           @Nonnull Executor preparationExecutor,
+                                          @Nonnull PreparationBarrier preparationBarrier,
                                           @Nonnull Executor reloadExecutor) {
+        final ResourceManager resourceManager = sharedState.resourceManager();
         final Map<String, ResourcesLoader> oldLoaders = mLoadersByMod;
         return CompletableFuture.supplyAsync(() -> {
                     var listeners = MuiModApi.snapOnUpdateLoaderListeners();

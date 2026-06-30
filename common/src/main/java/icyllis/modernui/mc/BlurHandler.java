@@ -218,7 +218,8 @@ public enum BlurHandler {
                 );
             }
             float volume = minecraft.options.getSoundSourceVolume(SoundSource.MASTER);
-            minecraft.getSoundManager().updateSourceVolume(SoundSource.MASTER, volume * mVolumeMultiplier);
+            // 1.21.11 renamed SoundManager#updateSourceVolume -> updateCategoryVolume
+            minecraft.getSoundManager().updateCategoryVolume(SoundSource.MASTER, volume * mVolumeMultiplier);
         }
     }
 

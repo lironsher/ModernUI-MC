@@ -21,7 +21,6 @@
     "MixinGuiRenderer",
     "MixinInventoryScreen",
     "MixinKeyboardHandler",
-    "MixinLevelRendererDBG",
     "MixinMinecraft",
     "MixinMinecraftEXT",
     "MixinMouseHandler",

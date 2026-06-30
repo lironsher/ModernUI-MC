@@ -769,6 +769,9 @@ public final class TooltipRenderer implements ScrollController.IListener {
         } else {
             colorMatrix.zero();
         }
+        // 1.21.11's DynamicUniforms#writeTransform has no extra-uniform slot;
+        // smuggle the rainbow offset through the unused m33 component (as in 26.2).
+        colorMatrix.m33(rainbowOffset);
 
         // we expect local coordinates, concat pose with model view
         Matrix3x2f localMatrix = new Matrix3x2f(pose);
@@ -779,8 +782,7 @@ public final class TooltipRenderer implements ScrollController.IListener {
                         new Matrix4f().mul(localMatrix),
                         pushData0,
                         pushData1,
-                        colorMatrix,
-                        rainbowOffset
+                        colorMatrix
                 );
         // estimate the draw bounds, half stroke width + 0.5 AA bloat + shadow spread
         float extent = sBorderWidth / 2f + 0.5f + shadowRadius * 1.2f;

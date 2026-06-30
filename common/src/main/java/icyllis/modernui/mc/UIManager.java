@@ -22,6 +22,7 @@ import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.opengl.GlTextureView;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.vertex.*;
 import icyllis.arc3d.core.MathUtil;
@@ -68,6 +69,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Util;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import org.apache.commons.io.output.StringBuilderWriter;
@@ -515,10 +517,10 @@ public abstract class UIManager implements LifecycleOwner {
             float y = (float) (mouseHandler.ypos() *
                     window.getHeight() / window.getScreenHeight());
             int mods = 0;
-            if (Screen.hasControlDown()) {
+            if (minecraft.hasControlDown()) {
                 mods |= KeyEvent.META_CTRL_ON;
             }
-            if (Screen.hasShiftDown()) {
+            if (minecraft.hasShiftDown()) {
                 mods |= KeyEvent.META_SHIFT_ON;
             }
             MotionEvent event = MotionEvent.obtain(now, MotionEvent.ACTION_SCROLL,
@@ -585,7 +587,7 @@ public abstract class UIManager implements LifecycleOwner {
                 }
             }
         }
-        if (!Screen.hasControlDown() || !Screen.hasShiftDown() || !ModernUIMod.isDeveloperMode()) {
+        if (!minecraft.hasControlDown() || !minecraft.hasShiftDown() || !ModernUIMod.isDeveloperMode()) {
             return;
         }
         if (action == GLFW_PRESS) {
@@ -951,10 +953,9 @@ public abstract class UIManager implements LifecycleOwner {
                     }
                     layer.ref();
                     mLayerTexture = new GlTexture_Wrapped(layer); // move
-                    // using the nearest sampler is performant
-                    // Arc3D always uses a sampler object, so we don't care if the
-                    // texture parameters are modified by Blaze3D
-                    mLayerTexture.setTextureFilter(FilterMode.NEAREST, /*useMipmaps*/ false);
+                    // using the nearest sampler is performant; 1.21.11 removed
+                    // GpuTexture#setTextureFilter, so filtering is selected per-bind
+                    // via the GpuSampler passed to TextureSetup.singleTexture(...) below.
                     mLayerTextureView = (GlTextureView) MuiModApi.get().getRealGpuDevice()
                             .createTextureView(mLayerTexture);
                 } else {
@@ -965,7 +966,8 @@ public abstract class UIManager implements LifecycleOwner {
                 MuiModApi.get().submitGuiElementRenderState(gr, new BlitRenderState(
                         // render target is always premultiplied
                         RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA,
-                        TextureSetup.singleTexture(mLayerTextureView),
+                        TextureSetup.singleTexture(mLayerTextureView,
+                                RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST)),
                         new Matrix3x2f().scale(1.0F / mWindow.getGuiScale()),
                         0, 0, mWindow.getWidth(), mWindow.getHeight(),
                         0.0F, 1.0F, 0.0F, 1.0F,
@@ -1075,7 +1077,7 @@ public abstract class UIManager implements LifecycleOwner {
         if (minecraft.isRunning() && mRunning &&
                 mScreen == null && minecraft.getOverlay() == null) {
             // Render the UI above everything
-            render(new GuiGraphics(minecraft, guiRenderState), 0, 0, 0);
+            render(new GuiGraphics(minecraft, guiRenderState, 0, 0), 0, 0, 0);
         }
     }
 
@@ -1216,7 +1218,8 @@ public abstract class UIManager implements LifecycleOwner {
                     if (event.getKeyCode() == KeyEvent.KEY_ESCAPE) {
                         back = true;
                     } else {
-                        InputConstants.Key key = InputConstants.getKey(event.getKeyCode(), event.getScanCode());
+                        InputConstants.Key key = InputConstants.getKey(
+                                new net.minecraft.client.input.KeyEvent(event.getKeyCode(), event.getScanCode(), event.getModifiers()));
                         back = MuiModApi.get().isKeyBindingMatches(minecraft.options.keyInventory, key);
                     }
                 } else {
