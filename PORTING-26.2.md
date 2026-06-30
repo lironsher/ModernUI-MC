@@ -10,10 +10,21 @@ Branch: `feat/mc-26.2` (fork: `lironsher/ModernUI-MC`). Target: produce a workin
   shader/uniform pipeline (`RenderPipeline.Builder` bind-groups) — all done & pushed.
 - ✅ The dead 26.1.2 **in-world immediate-mode** text subsystem (`MultiBufferSource`/`Font.drawInBatch`/
   `renderBuffers`, deleted in 26.2) was **excised**. GUI text = ModernUI; in-world text = **vanilla fallback**.
-- ⚠️ **NOT yet runtime-tested.** Compiles ≠ renders. Before relying on it, `runClient` and verify: the GUI
-  panel opens and ModernUI text/Hebrew RTL renders (Step-4 shader **bind-group order / GLSL `layout(set=)`**
-  is mirrored-from-vanilla but unverified — likely first thing to break), and re-point `MixinMinecraft`'s
-  stale `screen` shadow + `setScreen` inject to **`Gui.setScreen`** (runtime mixin, currently no-ops screen-change).
+- ✅ **RUNTIME smoke-tested (`runClient`): the mod LOADS to the title screen.** All ModernUI mixins apply,
+  text engine initializes (fonts/emoji/configs). Fixes that got it there (committed): `fabric.mod.json`
+  version range `<26.2`→`<26.3`; **VulkanMod → `compileOnly`** (only a 26.1.2 build exists; it crashed dev
+  via its `MinecraftMixin`); screen-change detection moved to a new **`MixinGui`** (`Gui.setScreen`) since
+  `Minecraft.screen`/`setScreen` were removed.
+- ⛔ **KNOWN remaining (the ONE real render bug): GUI text shader pipeline fails to compile.**
+  `Couldn't compile pipeline modernui:pipeline/modern_text_gui_normal: vertex shader
+  minecraft:core/rendertype_text_intensity was invalid`. Root cause: 26.2 renamed the vanilla text vertex
+  shader `core/rendertype_text_intensity` → `core/text`, AND its **GUI variant** (`IS_GUI` defined) only
+  outputs `vertexColor`/`texCoord0` — it **drops** `sphericalVertexDistance`/`cylindricalVertexDistance`,
+  which ModernUI's fragment shaders (`modernui:core/rendertype_modern_text_*.fsh`) still read. So a rename
+  alone won't link. **Fix:** ship a ModernUI-owned vertex shader (`modernui:core/...vsh`) that always emits
+  the varyings ModernUI's fsh expects (set the fog distances to 0 for the GUI/2D pipelines), and point
+  `TextRenderType.PIPELINE_SNIPPET`/`PIPELINE_SDF_SNIPPET` `.withVertexShader(...)` (lines ~65/89) at it.
+  Iterate against `runClient`. Until then, ModernUI GUI text likely renders wrong/missing.
 - ◻️ OPTIONAL follow-up — restore ModernUI's **in-world** text enhancement: implement `ModernPreparedText.visit()`
   to emit MC `TextRenderable`s (`render(Matrix4fc, VertexConsumer, light, …)`) and intercept the in-world
   `Font.prepareText` calls in `Display.TextDisplay.TextRenderState` / the `submitText` path (mirror
