@@ -101,11 +101,11 @@ public class ModernUIFabricClient extends ModernUIClient implements ClientModIni
 
             @Nonnull
             @Override
-            public CompletableFuture<Void> reload(@Nonnull PreparationBarrier preparationBarrier,
-                                                  @Nonnull ResourceManager resourceManager,
+            public CompletableFuture<Void> reload(@Nonnull SharedState sharedState,
                                                   @Nonnull Executor preparationExecutor,
+                                                  @Nonnull PreparationBarrier preparationBarrier,
                                                   @Nonnull Executor reloadExecutor) {
-                return ResourcesStore.getInstance().reload(preparationBarrier, resourceManager, preparationExecutor, reloadExecutor);
+                return ResourcesStore.getInstance().reload(sharedState, preparationExecutor, preparationBarrier, reloadExecutor);
             }
         });
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
@@ -227,14 +227,14 @@ public class ModernUIFabricClient extends ModernUIClient implements ClientModIni
 
                 @Nonnull
                 @Override
-                public CompletableFuture<Void> reload(@Nonnull PreparationBarrier preparationBarrier,
-                                                      @Nonnull ResourceManager resourceManager,
+                public CompletableFuture<Void> reload(@Nonnull SharedState sharedState,
                                                       @Nonnull Executor preparationExecutor,
+                                                      @Nonnull PreparationBarrier preparationBarrier,
                                                       @Nonnull Executor reloadExecutor) {
                     return FontResourceManager.getInstance().reload(
-                            preparationBarrier,
-                            resourceManager,
+                            sharedState,
                             preparationExecutor,
+                            preparationBarrier,
                             reloadExecutor
                     );
                 }

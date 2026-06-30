@@ -40,10 +40,14 @@ import static org.lwjgl.glfw.GLFW.*;
 @ApiStatus.Internal
 public final class UIManagerFabric extends UIManager {
 
+    // 1.21.11: KeyMapping takes a KeyMapping.Category (Identifier-keyed) instead of a String category.
+    public static final KeyMapping.Category KEYBIND_CATEGORY =
+            KeyMapping.Category.register(icyllis.modernui.mc.ModernUIMod.location("general"));
+
     @SuppressWarnings("NoTranslation")
     public static final KeyMapping OPEN_CENTER_KEY = new KeyMapping(
             "key.modernui.openCenter",
-            InputConstants.Type.KEYSYM, GLFW_KEY_K, "Modern UI");
+            InputConstants.Type.KEYSYM, GLFW_KEY_K, KEYBIND_CATEGORY);
 
     private UIManagerFabric() {
         super();
@@ -101,7 +105,8 @@ public final class UIManagerFabric extends UIManager {
             if (minecraft.screen == null ||
                     minecraft.screen.shouldCloseOnEsc() ||
                     minecraft.screen instanceof TitleScreen) {
-                if (Screen.hasControlDown() && OPEN_CENTER_KEY.matches(keyCode, scanCode)) {
+                if (minecraft.hasControlDown() && OPEN_CENTER_KEY.matches(
+                        new net.minecraft.client.input.KeyEvent(keyCode, scanCode, mods))) {
                     open(new CenterFragment2());
                     return;
                 }

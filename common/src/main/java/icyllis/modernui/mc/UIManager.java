@@ -1218,9 +1218,8 @@ public abstract class UIManager implements LifecycleOwner {
                     if (event.getKeyCode() == KeyEvent.KEY_ESCAPE) {
                         back = true;
                     } else {
-                        InputConstants.Key key = InputConstants.getKey(
+                        back = MuiModApi.get().isKeyBindingMatches(minecraft.options.keyInventory,
                                 new net.minecraft.client.input.KeyEvent(event.getKeyCode(), event.getScanCode(), event.getModifiers()));
-                        back = MuiModApi.get().isKeyBindingMatches(minecraft.options.keyInventory, key);
                     }
                 } else {
                     back = event.getKeyCode() == KeyEvent.KEY_ESCAPE;

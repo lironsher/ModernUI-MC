@@ -446,7 +446,8 @@ public abstract class MuiModApi {
                                                       Identifier resourceLocation,
                                                       VertexFormat vertexFormat) throws IOException;*/
 
-    public abstract boolean isKeyBindingMatches(KeyMapping keyMapping, InputConstants.Key key);
+    public abstract boolean isKeyBindingMatches(KeyMapping keyMapping,
+                                                net.minecraft.client.input.KeyEvent keyEvent);
 
     public abstract Style applyRarityTo(Rarity rarity, Style baseStyle);
 

@@ -95,10 +95,8 @@ public final class MuiFabricApi extends MuiModApi {
     }*/
 
     @Override
-    public boolean isKeyBindingMatches(KeyMapping keyMapping, InputConstants.Key key) {
-        return key.getType() == InputConstants.Type.KEYSYM
-                ? keyMapping.matches(key.getValue(), InputConstants.UNKNOWN.getValue())
-                : keyMapping.matches(InputConstants.UNKNOWN.getValue(), key.getValue());
+    public boolean isKeyBindingMatches(KeyMapping keyMapping, net.minecraft.client.input.KeyEvent keyEvent) {
+        return keyMapping.matches(keyEvent);
     }
 
     @Override

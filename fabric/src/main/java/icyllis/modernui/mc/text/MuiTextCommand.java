@@ -30,12 +30,14 @@ import net.minecraft.util.Util;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.arguments.ComponentArgument;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FontDescription;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.Identifier;
 
 public class MuiTextCommand {
 
-    public static final Identifier JB_MONO = ModernUIMod.location("jetbrains-mono-medium");
+    // 1.21.11: Style#withFont takes a FontDescription (not an Identifier)
+    public static final FontDescription JB_MONO =
+            new FontDescription.Resource(ModernUIMod.location("jetbrains-mono-medium"));
 
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher,
                                 CommandBuildContext context) {

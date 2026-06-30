@@ -24,6 +24,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -77,8 +80,8 @@ final class MenuScreen<T extends AbstractContainerMenu>
     }
 
     @Override
-    public void resize(@Nonnull Minecraft minecraft, int width, int height) {
-        super.resize(minecraft, width, height);
+    public void resize(int width, int height) {
+        super.resize(width, height);
         //MinecraftForge.EVENT_BUS.post(new GuiScreenEvent.InitGuiEvent.Post(this, buttons, this::widget,
         // this::widget));
 
@@ -153,17 +156,17 @@ final class MenuScreen<T extends AbstractContainerMenu>
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         return false;
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int mouseButton) {
+    public boolean mouseReleased(MouseButtonEvent event) {
         return false;
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int mouseButton, double deltaX, double deltaY) {
+    public boolean mouseDragged(MouseButtonEvent event, double deltaX, double deltaY) {
         return true;
     }
 
@@ -174,19 +177,19 @@ final class MenuScreen<T extends AbstractContainerMenu>
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        mHost.onKeyPress(keyCode, scanCode, modifiers);
+    public boolean keyPressed(KeyEvent event) {
+        mHost.onKeyPress(event.key(), event.scancode(), event.modifiers());
         return false;
     }
 
     @Override
-    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        mHost.onKeyRelease(keyCode, scanCode, modifiers);
+    public boolean keyReleased(KeyEvent event) {
+        mHost.onKeyRelease(event.key(), event.scancode(), event.modifiers());
         return false;
     }
 
     @Override
-    public boolean charTyped(char ch, int modifiers) {
-        return mHost.onCharTyped(ch);
+    public boolean charTyped(CharacterEvent event) {
+        return mHost.onCharTyped((char) event.codepoint());
     }
 }
