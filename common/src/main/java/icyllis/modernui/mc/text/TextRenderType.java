@@ -62,7 +62,7 @@ public abstract class TextRenderType {
     public static final int MODE_UNIFORM_SCALE = 4; // <- must be power of 2
 
     public static final RenderPipeline.Snippet PIPELINE_SNIPPET = RenderPipeline.builder()
-            .withVertexShader(Identifier.withDefaultNamespace("core/rendertype_text_intensity"))
+            .withVertexShader(Identifier.withDefaultNamespace("core/text"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_normal"))
             // 26.2: bind group layouts replace flat withUniform/withSampler. Fog -> FOG,
             // {DynamicTransforms, Projection} -> MATRICES_PROJECTION, {Sampler0, Sampler2} ->
@@ -82,11 +82,13 @@ public abstract class TextRenderType {
 
     public static final RenderPipeline PIPELINE_GUI_NORMAL = RenderPipeline.builder(PIPELINE_SNIPPET)
             .withLocation(ModernUIMod.location("pipeline/modern_text_gui_normal"))
+            // 26.2 core/text.vsh drops the fog varyings under IS_GUI; our fsh guards them the same way
+            .withShaderDefine("IS_GUI")
             .withDepthStencilState(Optional.empty())
             .build();
 
     public static final RenderPipeline.Snippet PIPELINE_SDF_SNIPPET = RenderPipeline.builder()
-            .withVertexShader(Identifier.withDefaultNamespace("core/rendertype_text_intensity"))
+            .withVertexShader(Identifier.withDefaultNamespace("core/text"))
             .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
             .withBindGroupLayout(BindGroupLayouts.FOG)
             .withBindGroupLayout(BindGroupLayouts.SAMPLER0_SAMPLER2)
@@ -110,6 +112,7 @@ public abstract class TextRenderType {
     public static final RenderPipeline PIPELINE_GUI_SDF = RenderPipeline.builder(PIPELINE_SDF_SNIPPET)
             .withLocation(ModernUIMod.location("pipeline/modern_text_gui_sdf"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
+            .withShaderDefine("IS_GUI")
             .withDepthStencilState(Optional.empty())
             .build();
 
