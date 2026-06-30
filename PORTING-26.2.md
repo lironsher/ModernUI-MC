@@ -15,16 +15,16 @@ Branch: `feat/mc-26.2` (fork: `lironsher/ModernUI-MC`). Target: produce a workin
   version range `<26.2`→`<26.3`; **VulkanMod → `compileOnly`** (only a 26.1.2 build exists; it crashed dev
   via its `MinecraftMixin`); screen-change detection moved to a new **`MixinGui`** (`Gui.setScreen`) since
   `Minecraft.screen`/`setScreen` were removed.
-- ⛔ **KNOWN remaining (the ONE real render bug): GUI text shader pipeline fails to compile.**
-  `Couldn't compile pipeline modernui:pipeline/modern_text_gui_normal: vertex shader
-  minecraft:core/rendertype_text_intensity was invalid`. Root cause: 26.2 renamed the vanilla text vertex
-  shader `core/rendertype_text_intensity` → `core/text`, AND its **GUI variant** (`IS_GUI` defined) only
-  outputs `vertexColor`/`texCoord0` — it **drops** `sphericalVertexDistance`/`cylindricalVertexDistance`,
-  which ModernUI's fragment shaders (`modernui:core/rendertype_modern_text_*.fsh`) still read. So a rename
-  alone won't link. **Fix:** ship a ModernUI-owned vertex shader (`modernui:core/...vsh`) that always emits
-  the varyings ModernUI's fsh expects (set the fog distances to 0 for the GUI/2D pipelines), and point
-  `TextRenderType.PIPELINE_SNIPPET`/`PIPELINE_SDF_SNIPPET` `.withVertexShader(...)` (lines ~65/89) at it.
-  Iterate against `runClient`. Until then, ModernUI GUI text likely renders wrong/missing.
+- ✅ **GUI text shader pipeline FIXED** (was: `Couldn't compile pipeline modernui:pipeline/modern_text_gui_normal`).
+  26.2 renamed the vanilla text vsh `core/rendertype_text_intensity`→`core/text`, whose `IS_GUI` variant drops
+  the `spherical/cylindricalVertexDistance` fog varyings that ModernUI's `.fsh` read. Fix (mirrors vanilla 26.2
+  `text.fsh`): `TextRenderType` points both snippets at `minecraft:core/text` + `.withShaderDefine("IS_GUI")` on
+  the GUI pipelines; all 5 `modern_text *.fsh` guard the fog varyings/`apply_fog` with
+  `#if !defined(IS_GUI) && !defined(IS_SEE_THROUGH)`. **Verified via `runClient`: pipeline compiles AND links,
+  client runs to the title screen, no shader errors.** (Benign warnings remain: GUI variant doesn't read the
+  `UV2`/`Sampler2` lightmap — cosmetic; could give GUI pipelines a lightmap-free snippet to silence.)
+- 🟢 **Current state: the 26.2 fork builds clean AND runs to the title screen with ModernUI fully initialized
+  and GUI text rendering through ModernUI's pipeline.** This is the path Poofy's in-game panel uses.
 - ◻️ OPTIONAL follow-up — restore ModernUI's **in-world** text enhancement: implement `ModernPreparedText.visit()`
   to emit MC `TextRenderable`s (`render(Matrix4fc, VertexConsumer, light, …)`) and intercept the in-world
   `Font.prepareText` calls in `Display.TextDisplay.TextRenderState` / the `submitText` path (mirror
