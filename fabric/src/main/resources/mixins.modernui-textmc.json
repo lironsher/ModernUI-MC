@@ -13,7 +13,6 @@
     "MixinBidiReorder",
     "MixinClientLanguage",
     "MixinContextualBar",
-    "MixinEditBox",
     "MixinFontManager",
     "MixinFontRenderer",
     "MixinFormattedCharSequence",
