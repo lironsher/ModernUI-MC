@@ -496,6 +496,22 @@ public abstract class UIManager implements LifecycleOwner {
         mRoot.mHandler.postDelayed(mLooper::quitSafely, 60);
     }
 
+    /**
+     * Called on client shutdown (CLIENT_STOPPING). At shutdown the render thread stops
+     * consuming frames, so the UI thread can be blocked forever in endDrawLocked's
+     * mRenderLock.wait(). Wake it and stop the loop so MC can shut down cleanly (no
+     * ServerWatchdog crash).
+     */
+    public void onClientStopping() {
+        if (!mRunning) return;
+        mRunning = false;
+        ViewRootImpl root = mRoot;
+        if (root != null) {
+            root.wakeRenderLock();
+            root.mHandler.post(this::finish);
+        }
+    }
+
     private void scheduleHoverMoveForScroll() {
         mRoot.mHandler.removeCallbacks(mSyntheticHoverMove);
         mRoot.mHandler.postDelayed(mSyntheticHoverMove, 60);
@@ -1249,6 +1265,16 @@ public abstract class UIManager implements LifecycleOwner {
 
         private final Rect mGlobalRect = new Rect();
 
+        /**
+         * Wake the UI thread if it is waiting in endDrawLocked. Called from
+         * onClientStopping() to unblock the thread so shutdown can proceed.
+         */
+        void wakeRenderLock() {
+            synchronized (mRenderLock) {
+                mRenderLock.notifyAll();
+            }
+        }
+
         ContextMenuBuilder mContextMenu;
         MenuHelper mContextMenuHelper;
 
@@ -1359,7 +1385,7 @@ public abstract class UIManager implements LifecycleOwner {
                 }
                 mLastFrameTask = task;
                 try {
-                    mRenderLock.wait();
+                    mRenderLock.wait(1000);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }

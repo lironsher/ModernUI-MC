@@ -165,6 +165,16 @@ public class ModernUIFabricClient extends ModernUIClient implements ClientModIni
             }
         });
 
+        // Wake + stop ModernUI's UI thread on shutdown so it can't deadlock in endDrawLocked
+        // and trip Minecraft's client shutdown watchdog.
+        ClientLifecycleEvents.CLIENT_STOPPING.register((mc) -> {
+            try {
+                UIManager.getInstance().onClientStopping();
+            } catch (Throwable ignored) {
+                // UIManager may never have initialized; nothing to stop.
+            }
+        });
+
         ConfigRegistry.INSTANCE.register(ID, ModConfig.Type.CLIENT, ConfigImpl.CLIENT_SPEC,
                 ModernUI.NAME_CPT + "/client.toml");
         ConfigRegistry.INSTANCE.register(ID, ModConfig.Type.CLIENT, ConfigImpl.TEXT_SPEC,
