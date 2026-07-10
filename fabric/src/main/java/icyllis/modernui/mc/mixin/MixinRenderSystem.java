@@ -64,6 +64,11 @@ public class MixinRenderSystem {
             options.mAllowGLSPIRV = Boolean.parseBoolean(value);
         }
         options.mDriverBugWorkarounds = ModernUIClient.getGpuDriverBugWorkarounds();
+        // b7 (Poofy invisible-panel investigation): the affected machine renders ZERO pixels into
+        // the UI layer with no errors because Arc3D auto-skips glGetError (caps SkipErrorChecks=
+        // true). Force checks ON so the failing GL call is named in the log. Dev-channel build
+        // only — costs some perf, remove when the root cause is fixed.
+        options.mSkipGLErrorChecks = Boolean.FALSE;
         switch (device.getDeviceInfo().backendName()) {
             case "OpenGL" -> {
                 if (!Core.initOpenGL(options)) {
