@@ -1413,6 +1413,27 @@ public abstract class UIManager implements LifecycleOwner {
             }
         }
 
+        // b5 (Poofy POOFY-C9TE): UI thread draws (dispatchDraw fires) but recordings never reach
+        // the render thread on one machine — bracket every producer branch so the drop point is
+        // visible in a field log. b5Log dedups per call-site state; endDraw cycle counter logs the
+        // first cycles after each surface (re)creation fully, then anomalies only.
+        private String mB5LastBegin = "", mB5LastEnd = "";
+        private long mB5EndCycles = 0;
+
+        private void b5Begin(String state) {
+            if (!state.equals(mB5LastBegin)) {
+                mB5LastBegin = state;
+                System.out.println("[ModernUI-b5] beginDraw: " + state);
+            }
+        }
+
+        private void b5End(String state) {
+            if (!state.equals(mB5LastEnd)) {
+                mB5LastEnd = state;
+                System.out.println("[ModernUI-b5] endDraw: " + state);
+            }
+        }
+
         @Override
         protected Canvas beginDrawLocked(int width, int height) {
             synchronized (mRenderLock) {
@@ -1429,20 +1450,29 @@ public abstract class UIManager implements LifecycleOwner {
                                 Engine.SurfaceOrigin.kUpperLeft,
                                 null
                         ));
+                        mB5EndCycles = 0; // fresh surface — log the first endDraw cycles again
+                        b5Begin("surface " + (mSurface == null ? "CREATE FAILED" : "created") + " " + width + "x" + height);
                     }
                 }
                 if (mSurface != null && width > 0 && height > 0) {
                     //mSurface.getCanvas().clear(0);
                     return new ArcCanvas(mSurface.getCanvas());
                 }
+                b5Begin("returning null canvas (surface=" + (mSurface != null) + " " + width + "x" + height + ") — frame skipped");
                 return null;
             }
         }
 
         @Override
         protected void endDrawLocked(@Nonnull Canvas canvas) {
+            long cycle = ++mB5EndCycles;
+            boolean verbose = cycle <= 5 || cycle % 100 == 0;
+            try {
             canvas.restoreToCount(1);
             Recording task = Core.requireUiRecordingContext().snap();
+            if (verbose || task == null) {
+                b5End("cycle=" + cycle + " snap=" + (task == null ? "NULL (nothing recorded!)" : "ok"));
+            }
             synchronized (mRenderLock) {
                 if (mLastFrameTask != null) {
                     mLastFrameTask.close();
@@ -1454,7 +1484,13 @@ public abstract class UIManager implements LifecycleOwner {
                     Thread.currentThread().interrupt();
                 }
                 if (mLastFrameTask != null) {
+                    // The render thread did NOT consume this frame within 1s — it gets DISCARDED
+                    // (bounded wait from the quit-hang fix). If this shows in a field log, the
+                    // consumer isn't swapping and every UI frame is being thrown away.
+                    System.out.println("[ModernUI-b5] endDraw: cycle=" + cycle + " frame DISCARDED (render thread never swapped within 1s)");
                     mLastFrameTask.close();
+                } else if (verbose) {
+                    b5End("cycle=" + cycle + " frame consumed by render thread");
                 }
                 mLastFrameTask = null;
             }
@@ -1462,6 +1498,11 @@ public abstract class UIManager implements LifecycleOwner {
             if (System.nanoTime() - mLastPurgeNanos >= 20_000_000_000L) {
                 mLastPurgeNanos = System.nanoTime();
                 context.performDeferredCleanup(120_000);
+            }
+            } catch (Throwable t) {
+                System.out.println("[ModernUI-b5] endDraw THREW (cycle=" + cycle + "): " + t);
+                t.printStackTrace();
+                throw t;
             }
         }
 
