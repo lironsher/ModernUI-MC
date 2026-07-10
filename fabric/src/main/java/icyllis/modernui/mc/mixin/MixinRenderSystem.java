@@ -58,6 +58,12 @@ public class MixinRenderSystem {
         String value = ModernUIClient.getBootstrapProperty(ModernUIClient.BOOTSTRAP_USE_STAGING_BUFFERS_IN_OPENGL);
         if (value != null) {
             options.mUseStagingBuffers = Boolean.parseBoolean(value);
+        } else {
+            // b9 (Poofy invisible-panel saga): upstream flipped this default true→false in 3.13.
+            // On the affected machine (GTX 1650, GL 3.3 core) the non-staging (persistent mapped
+            // buffer) upload path yields silent empty draws — zero pixels, zero GL errors
+            // (POOFY-BBJ4: survives resetContext). Restore the old default: staging buffers ON.
+            options.mUseStagingBuffers = true;
         }
         value = ModernUIClient.getBootstrapProperty(ModernUIClient.BOOTSTRAP_ALLOW_SPIRV_IN_OPENGL);
         if (value != null) {
