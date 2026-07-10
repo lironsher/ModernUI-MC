@@ -1000,6 +1000,13 @@ public abstract class UIManager implements LifecycleOwner {
         }
 
         if (recording != null) {
+            // b8 FIX (Poofy invisible-panel saga): the GL context is SHARED with Minecraft, which
+            // mutates state every frame; Arc3D caches state assumptions and never re-validates
+            // them, so stale external state (colorMask/scissor class) can silently mask ALL
+            // writes into the UI layer — zero pixels, zero GL errors, driver-dependent (probed:
+            // GTX 1650 GL 3.3 core blank, Apple GL 4.1 fine). Drop every cached assumption so
+            // Arc3D re-establishes the state it needs before executing the UI draw.
+            context.resetContext(~0);
             boolean added = context.addTask(recording);
             recording.close();
             if (!added) {
