@@ -913,15 +913,49 @@ public abstract class UIManager implements LifecycleOwner {
         msg.sendToTarget();
     }
 
-    // b3 field diagnostics (Poofy, POOFY-X2RY): a machine where the panel view draws on the UI
-    // thread but no pixels ever reach the screen. Log each render-path state ONCE (and again on
-    // change) so a single field log shows where the layer is dropped without frame spam.
+    // b3/b4 field diagnostics (Poofy, POOFY-X2RY/MAA3): a machine where the panel view draws on
+    // the UI thread but no pixels ever reach the screen. b3 proved the blit IS submitted every
+    // frame with correct dims; b4 adds (a) ONE combined state line per change (b3 alternated two
+    // states every frame and flooded the log), (b) a pixel readback from the layer texture right
+    // after fresh content is submitted — blank layer = Arc3D GL3.3 draw issue, content = blit issue.
     private String mB3LastState = "";
+    private int mB4ProbesLeft = 0;
 
     private void b3State(String state) {
         if (!state.equals(mB3LastState)) {
             mB3LastState = state;
-            System.out.println("[ModernUI-b3] render path: " + state);
+            System.out.println("[ModernUI-b4] render path: " + state);
+        }
+    }
+
+    /** Read an 8x8 center block from the layer texture and report non-transparent pixel count. */
+    private void b4ProbeLayer(icyllis.arc3d.opengl.GLTexture layer) {
+        try {
+            int w = layer.getWidth(), h = layer.getHeight();
+            int prevFbo = GL33C.glGetInteger(GL33C.GL_READ_FRAMEBUFFER_BINDING);
+            int prevAlign = GL33C.glGetInteger(GL33C.GL_PACK_ALIGNMENT);
+            int fbo = GL33C.glGenFramebuffers();
+            GL33C.glBindFramebuffer(GL33C.GL_READ_FRAMEBUFFER, fbo);
+            GL33C.glFramebufferTexture2D(GL33C.GL_READ_FRAMEBUFFER, GL33C.GL_COLOR_ATTACHMENT0,
+                    GL33C.GL_TEXTURE_2D, layer.getHandle(), 0);
+            int status = GL33C.glCheckFramebufferStatus(GL33C.GL_READ_FRAMEBUFFER);
+            if (status != GL33C.GL_FRAMEBUFFER_COMPLETE) {
+                System.out.println("[ModernUI-b4] layer probe: FBO incomplete status=0x" + Integer.toHexString(status));
+            } else {
+                GL33C.glPixelStorei(GL33C.GL_PACK_ALIGNMENT, 1);
+                java.nio.ByteBuffer buf = java.nio.ByteBuffer.allocateDirect(8 * 8 * 4);
+                GL33C.glReadPixels(w / 2 - 4, h / 2 - 4, 8, 8, GL33C.GL_RGBA, GL33C.GL_UNSIGNED_BYTE, buf);
+                int nonZero = 0;
+                for (int i = 3; i < 8 * 8 * 4; i += 4) if (buf.get(i) != 0) nonZero++;
+                int err = GL33C.glGetError();
+                System.out.println("[ModernUI-b4] layer probe: nonTransparent=" + nonZero + "/64 center of "
+                        + w + "x" + h + (err != 0 ? " glError=0x" + Integer.toHexString(err) : ""));
+                GL33C.glPixelStorei(GL33C.GL_PACK_ALIGNMENT, prevAlign);
+            }
+            GL33C.glBindFramebuffer(GL33C.GL_READ_FRAMEBUFFER, prevFbo);
+            GL33C.glDeleteFramebuffers(fbo);
+        } catch (Throwable t) {
+            System.out.println("[ModernUI-b4] layer probe failed: " + t);
         }
     }
 
@@ -950,10 +984,12 @@ public abstract class UIManager implements LifecycleOwner {
         @SharedPtr
         ImageProxy surface = frameTask.getRight();
 
-        if (mScreen != null) {
-            b3State("frame: recording=" + (recording != null)
-                    + " surface=" + (surface == null ? "null" : surface.getImage() == null
-                        ? "image-null" : surface.getImage().getClass().getSimpleName()));
+        boolean b4HadRecording = recording != null;
+        if (mScreen != null && surface == null) {
+            b3State("frame: recording=" + b4HadRecording + " surface=null (nothing to blit)");
+        }
+        if (mScreen == null) {
+            mB4ProbesLeft = 3; // fresh budget for the next screen open
         }
 
         if (recording != null) {
@@ -1027,9 +1063,13 @@ public abstract class UIManager implements LifecycleOwner {
                 }
                 gr.nextStratum();
                 if (mScreen != null) {
-                    b3State("blit submitted: layer=" + layer.getWidth() + "x" + layer.getHeight()
+                    b3State("blit: layer=" + layer.getWidth() + "x" + layer.getHeight()
                             + " window=" + minecraft.getWindow().getWidth() + "x" + minecraft.getWindow().getHeight()
                             + " guiScale=" + minecraft.getWindow().getGuiScale());
+                    if (b4HadRecording && mB4ProbesLeft > 0) {
+                        mB4ProbesLeft--;
+                        b4ProbeLayer(layer);
+                    }
                 }
                 MuiModApi.get().submitGuiElementRenderState(gr, new BlitRenderState(
                         // render target is always premultiplied
