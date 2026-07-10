@@ -920,6 +920,7 @@ public abstract class UIManager implements LifecycleOwner {
     // after fresh content is submitted — blank layer = Arc3D GL3.3 draw issue, content = blit issue.
     private String mB3LastState = "";
     private int mB4ProbesLeft = 0;
+    private Object mB4LastScreen = null;
 
     private void b3State(String state) {
         if (!state.equals(mB3LastState)) {
@@ -988,8 +989,14 @@ public abstract class UIManager implements LifecycleOwner {
         if (mScreen != null && surface == null) {
             b3State("frame: recording=" + b4HadRecording + " surface=null (nothing to blit)");
         }
-        if (mScreen == null) {
-            mB4ProbesLeft = 3; // fresh budget for the next screen open
+        // b6: b4/b5's probe never fired because its budget was topped up in a path that never
+        // runs (render() is not called at all while no ModernUI screen is open, so the
+        // "mScreen == null" reset was dead code and the budget stayed 0). Reset on screen CHANGE.
+        if (mScreen != mB4LastScreen) {
+            mB4LastScreen = mScreen;
+            if (mScreen != null) {
+                mB4ProbesLeft = 3;
+            }
         }
 
         if (recording != null) {
