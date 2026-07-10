@@ -913,9 +913,22 @@ public abstract class UIManager implements LifecycleOwner {
         msg.sendToTarget();
     }
 
+    // b3 field diagnostics (Poofy, POOFY-X2RY): a machine where the panel view draws on the UI
+    // thread but no pixels ever reach the screen. Log each render-path state ONCE (and again on
+    // change) so a single field log shows where the layer is dropped without frame spam.
+    private String mB3LastState = "";
+
+    private void b3State(String state) {
+        if (!state.equals(mB3LastState)) {
+            mB3LastState = state;
+            System.out.println("[ModernUI-b3] render path: " + state);
+        }
+    }
+
     @RenderThread
     public void render(@Nonnull GuiGraphicsExtractor gr, int mouseX, int mouseY, float deltaTick) {
         if (mNoRender) {
+            b3State("mNoRender=true (GL caps insufficient — UI layer disabled)");
             /*if (mScreen != null) {
                 String error = Language.getInstance().getOrDefault("error.modernui.gl_caps");
                 int x = (mWindow.getGuiScaledWidth() - minecraft.font.width(error)) / 2;
@@ -936,6 +949,12 @@ public abstract class UIManager implements LifecycleOwner {
         Recording recording = frameTask.getLeft();
         @SharedPtr
         ImageProxy surface = frameTask.getRight();
+
+        if (mScreen != null) {
+            b3State("frame: recording=" + (recording != null)
+                    + " surface=" + (surface == null ? "null" : surface.getImage() == null
+                        ? "image-null" : surface.getImage().getClass().getSimpleName()));
+        }
 
         if (recording != null) {
             boolean added = context.addTask(recording);
@@ -1007,6 +1026,11 @@ public abstract class UIManager implements LifecycleOwner {
                     mLayerTexture.touch();
                 }
                 gr.nextStratum();
+                if (mScreen != null) {
+                    b3State("blit submitted: layer=" + layer.getWidth() + "x" + layer.getHeight()
+                            + " window=" + minecraft.getWindow().getWidth() + "x" + minecraft.getWindow().getHeight()
+                            + " guiScale=" + minecraft.getWindow().getGuiScale());
+                }
                 MuiModApi.get().submitGuiElementRenderState(gr, new BlitRenderState(
                         // render target is always premultiplied
                         RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA,
